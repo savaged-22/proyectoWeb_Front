@@ -1,0 +1,141 @@
+<!-- Header Area -->
+<header class="page-header">
+  <div class="header-titles">
+    <h1>System Monitoring</h1>
+    <p>Real-time telemetry and infrastructure health status.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-outline" (click)="seedData()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      Seed DB Data
+    </button>
+  </div>
+</header>
+
+<!-- Top KPI Cards -->
+<div class="kpi-row">
+  <div class="kpi-box">
+    <span class="kpi-title">TOTAL MESSAGES</span>
+    <div class="kpi-value text-dark">{{ totalMessages | number }}</div>
+    <div class="kpi-footer text-green">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+      +12% vs last hr
+    </div>
+  </div>
+  
+  <div class="kpi-box">
+    <span class="kpi-title">PENDING TASKS</span>
+    <div class="kpi-value text-blue">{{ pendingTasks | number }}</div>
+    <div class="kpi-footer text-gray">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Average latency 45ms
+    </div>
+  </div>
+  
+  <div class="kpi-box">
+    <span class="kpi-title">ACTIVE SUBSCRIPTIONS</span>
+    <div class="kpi-value text-dark">{{ activeSubs | number }}</div>
+    <div class="kpi-footer text-green">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      Healthy Connectivity
+    </div>
+  </div>
+  
+  <div class="kpi-box">
+    <span class="kpi-title">ERROR RATE</span>
+    <div class="kpi-value text-red">{{ errorRate }}</div>
+    <div class="kpi-footer text-red">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      Review logs
+    </div>
+  </div>
+</div>
+
+<!-- Middle Section: Table Panel -->
+<div class="panel mb-4">
+  <div class="panel-header">
+    <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052cc" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> public.mensaje_proceso</h3>
+    <div class="panel-actions">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+    </div>
+  </div>
+  <table class="mon-table">
+    <thead>
+      <tr>
+        <th>MESSAGE NAME</th>
+        <th>STATUS</th>
+        <th>CORRELATION KEY</th>
+        <th>CREATED AT</th>
+        <th>PAYLOAD SIZE</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="messages.length === 0">
+        <td colspan="6" style="text-align: center; padding: 2rem;">Loading messages...</td>
+      </tr>
+      <tr *ngFor="let msg of messages">
+        <td class="font-bold">{{ msg.name }}</td>
+        <td>
+          <span class="status-badge" [ngClass]="msg.status | lowercase">{{ msg.status }}</span>
+        </td>
+        <td class="mono-text">{{ msg.key }}</td>
+        <td class="text-gray">{{ msg.date }}</td>
+        <td class="text-right">{{ msg.size }}</td>
+        <td><a href="#" class="action-link">{{ msg.action }}</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Bottom Section: Split -->
+<div class="bottom-split">
+  
+  <!-- Left Side: Subscriptions -->
+  <div class="panel bg-transparent no-border">
+    <h3 class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052cc" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg> public.suscripcion_mensaje</h3>
+    
+    <div class="sub-grid">
+      <div class="sub-card" *ngFor="let sub of subscriptions" [ngClass]="sub.status">
+        <div class="sub-header">
+          <span class="sub-type" [ngClass]="sub.status">{{ sub.type }}</span>
+          <svg *ngIf="sub.status === 'ok'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <svg *ngIf="sub.status === 'warning'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21L21.5 8"></path></svg>
+        </div>
+        <div class="sub-name">{{ sub.name }}</div>
+        
+        <div class="sub-stats">
+          <div class="stat-row">
+            <span>Queue Depth</span>
+            <strong>{{ sub.depth }}</strong>
+          </div>
+          <div class="stat-row">
+            <span>Throughput</span>
+            <strong>{{ sub.throughput }}</strong>
+          </div>
+        </div>
+        
+        <div class="sub-id">Sub ID: {{ sub.subId }}</div>
+      </div>
+      
+      <div class="sub-card dashed-card">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        <span>REGISTER NEW SUBSCRIPTION</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Terminal Logs -->
+  <div class="panel bg-transparent no-border">
+    <h3 class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052cc" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg> public.entrega_mensaje</h3>
+    
+    <div class="terminal">
+      <div class="log-line" *ngFor="let log of logs" [ngClass]="{'error-block': log.isErrorBlock}">
+        <span class="log-time">[{{ log.time }}]</span>
+        <span class="log-level" [ngClass]="log.levelClass">{{ log.level }}</span>
+        <span class="log-msg" [innerHTML]="log.msg"></span>
+      </div>
+    </div>
+  </div>
+</div>

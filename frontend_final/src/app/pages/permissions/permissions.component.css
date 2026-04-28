@@ -1,0 +1,65 @@
+/* Inherit common dashboard styles */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.header-titles h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem 0; }
+.header-titles p { font-size: 0.9rem; color: #64748b; margin: 0; }
+.header-actions { display: flex; gap: 1rem; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.kpi-box { background: white; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1.25rem; display: flex; flex-direction: column; }
+.kpi-title { font-size: 0.7rem; font-weight: 700; color: #64748b; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+.kpi-value { font-size: 2rem; font-weight: 500; }
+.text-dark { color: #0f172a; }
+.text-blue { color: #0052cc; }
+.text-green { color: #10b981; }
+.text-red { color: #ef4444 !important; border-color: #ef4444 !important; }
+.text-gray { color: #64748b; font-size: 0.8rem; }
+
+.dashboard-split { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; }
+
+.panel { background: white; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.panel-header { padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; }
+.panel-header h3 { margin: 0; font-size: 0.9rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+
+/* Left Side */
+.role-list { flex: 1; overflow-y: auto; }
+.role-item { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; }
+.role-item:hover { background-color: #f8fafc; }
+.role-item.active { background-color: #eff6ff; border-left: 3px solid #0052cc; padding-left: calc(1.25rem - 3px); }
+.role-icon { width: 36px; height: 36px; border-radius: 6px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; }
+.role-item.active .role-icon { background-color: white; }
+.role-details { display: flex; flex-direction: column; }
+.role-details strong { font-size: 0.85rem; color: #0f172a; }
+.role-details span { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+/* Right Side */
+.detail-header { align-items: flex-start; padding: 1.5rem; }
+.detail-header h3 { font-size: 1.2rem; margin-bottom: 4px; }
+.detail-header p { margin: 0; font-size: 0.8rem; color: #64748b; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+.badge-warning { background-color: #fef3c7; color: #b45309; }
+.badge-gray { background-color: #f1f5f9; color: #475569; }
+
+.permissions-container { padding: 1.5rem; flex: 1; }
+.section-heading { margin: 0 0 1rem 0; font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.perm-table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+.perm-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.7rem; font-weight: 700; color: #64748b; background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+.perm-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #0f172a; vertical-align: middle; }
+.perm-table tr:last-child td { border-bottom: none; }
+
+/* Custom Toggle Switch */
+.toggle-switch { width: 44px; height: 24px; border-radius: 12px; position: relative; cursor: pointer; transition: background-color 0.2s; }
+.toggle-switch.on { background-color: #10b981; }
+.toggle-switch.off { background-color: #cbd5e1; }
+.toggle-switch.disabled { opacity: 0.6; cursor: not-allowed; }
+.toggle-knob { width: 20px; height: 20px; background-color: white; border-radius: 50%; position: absolute; top: 2px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-switch.on .toggle-knob { transform: translateX(22px); }
+.toggle-switch.off .toggle-knob { transform: translateX(2px); }
+
+.panel-footer { padding: 1.25rem 1.5rem; border-top: 1px solid #e2e8f0; background-color: #f8fafc; display: flex; gap: 1rem; }
+
+/* Buttons */
+.btn-primary { background-color: #0052cc; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s; }
+.btn-primary:hover { background-color: #0043a6; }
+.btn-outline { background-color: white; color: #334155; border: 1px solid #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+.btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }

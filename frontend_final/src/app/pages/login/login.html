@@ -1,0 +1,107 @@
+<div class="login-container">
+  <!-- Left Side: Branding / Marketing -->
+  <div class="login-left">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="badge">ENTERPRISE GRADE</div>
+      <h1 class="title">Master Your Operational Complexity</h1>
+      <p class="description">
+        BPM Command provides clinical, authoritative control over multi-layered business processes. Standardize flows, enforce governance, and accelerate decision-making from a single source of truth.
+      </p>
+      
+      <div class="metrics">
+        <div class="metric">
+          <h3>99.9%</h3>
+          <span>UPTIME SLA</span>
+        </div>
+        <div class="metric">
+          <h3>ISO/IEC</h3>
+          <span>27001 CERTIFIED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Login Form -->
+  <div class="login-right">
+    <div class="form-wrapper">
+      <div class="header">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" rx="4" fill="#0A192F"/>
+            <path d="M6 8h12v2H6zM6 14h8v2H6zM6 11h12v2H6z" fill="#fff"/>
+          </svg>
+          <h2>BPM COMMAND</h2>
+        </div>
+        <p class="subtitle">Log in to your command center.</p>
+      </div>
+
+      <div class="card">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          
+          <div class="form-group">
+            <label for="email">EMAIL ADDRESS</label>
+            <div class="input-container">
+              <span class="icon">✉</span>
+              <input type="email" id="email" formControlName="email" placeholder="name@company.com" autocomplete="email">
+            </div>
+            <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="error-msg">
+              Valid email is required.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="password">PASSWORD</label>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+            <div class="input-container">
+              <span class="icon">🔒</span>
+              <input type="password" id="password" formControlName="password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="error-msg">
+              Password is required.
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="global-error">
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" class="submit-btn" [disabled]="isLoading">
+            {{ isLoading ? 'Signing In...' : 'Sign In →' }}
+          </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="sso-info">
+          <div class="sso-icon">🛡️</div>
+          <div class="sso-text">
+            <strong>Enterprise SSO available</strong>
+            <span>Contact your admin to log in via Okta or Azure AD.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="register-prompt">
+        New to BPM Command? <a href="#">Request Access</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="login-footer">
+      <div class="footer-left">
+        <strong>BPM Command Suite</strong>
+        <p>© 2024 BPM Command Suite. Enterprise Grade Operations.</p>
+      </div>
+      <div class="footer-right">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Security Architecture</a>
+        <a href="#">SLA</a>
+        <a href="#">Documentation</a>
+      </div>
+    </footer>
+  </div>
+</div>
