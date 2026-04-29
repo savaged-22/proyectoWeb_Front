@@ -1,79 +1,11 @@
 # ─────────────────────────────────────────────────────────────────
-# Backend
-# ─────────────────────────────────────────────────────────────────
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: proyectoweb-backend
-  labels:
-    app: proyectoweb-backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: proyectoweb-backend
-  template:
-    metadata:
-      labels:
-        app: proyectoweb-backend
-    spec:
-      containers:
-        - name: proyectoweb-backend
-          image: __BACKEND_IMAGE__
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          envFrom:
-            - secretRef:
-                name: lulo-backend-secret
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 5
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 90
-            periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 5
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: proyectoweb-backend-service
-  labels:
-    app: proyectoweb-backend
-spec:
-  selector:
-    app: proyectoweb-backend
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
-  type: ClusterIP
-
----
-# ─────────────────────────────────────────────────────────────────
-# Frontend
+# Frontend Angular SSR — Deployment
 # ─────────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proyectoweb-frontend
+  namespace: grupo12
   labels:
     app: proyectoweb-frontend
 spec:
@@ -91,11 +23,11 @@ spec:
           image: __FRONTEND_IMAGE__
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
+            - containerPort: 4000
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 4000
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
@@ -103,7 +35,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 4000
             initialDelaySeconds: 20
             periodSeconds: 20
             timeoutSeconds: 3
@@ -115,12 +47,19 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+      imagePullSecrets:
+        - name: ghcr-secret
 
 ---
+# ─────────────────────────────────────────────────────────────────
+# Frontend — Service
+# El Ingress del repo backend apunta a este nombre: proyectoweb-frontend
+# ─────────────────────────────────────────────────────────────────
 apiVersion: v1
 kind: Service
 metadata:
-  name: proyectoweb-frontend-service
+  name: proyectoweb-frontend
+  namespace: grupo12
   labels:
     app: proyectoweb-frontend
 spec:
@@ -129,34 +68,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 4000
   type: ClusterIP
-
----
-# ─────────────────────────────────────────────────────────────────
-# Ingress: expone frontend en / y backend en /api
-# ─────────────────────────────────────────────────────────────────
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: proyectoweb-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-    - http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: proyectoweb-backend-service
-                port:
-                  number: 8080
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: proyectoweb-frontend-service
-                port:
-                  number: 80
