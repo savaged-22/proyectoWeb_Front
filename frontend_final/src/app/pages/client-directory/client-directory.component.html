@@ -1,0 +1,132 @@
+<nav class="breadcrumb">
+  <a routerLink="/app/dashboard">Directory</a>
+  <span>/</span>
+  <span class="current">Companies</span>
+</nav>
+
+<header class="page-header">
+  <div>
+    <h1>Enterprise Clients</h1>
+    <p class="subtitle">
+      Manage organizational units and billing entities within the BPM ecosystem.
+    </p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" (click)="form.nombreEmpresa = form.nombreEmpresa">+ Add New Empresa</button>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- Registration form -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Registration</div>
+    </div>
+    <p class="hint mb-2">Add a new legal entity to the system.</p>
+
+    <form (ngSubmit)="submit()">
+      <div class="form-group">
+        <label>Company Name (Empresa)</label>
+        <input type="text" [(ngModel)]="form.nombreEmpresa" name="nombreEmpresa"
+               placeholder="e.g. Globex Corporation" required />
+      </div>
+      <div class="form-group">
+        <label>NIT (Tax ID)</label>
+        <input type="text" [(ngModel)]="form.nit" name="nit"
+               placeholder="900.123.456-7" required />
+      </div>
+      <div class="form-group">
+        <label>Contact Email</label>
+        <input type="email" [(ngModel)]="form.emailContacto" name="emailContacto"
+               placeholder="operations@company.com" />
+      </div>
+      <div class="form-group">
+        <label>Admin Email</label>
+        <input type="email" [(ngModel)]="form.emailAdmin" name="emailAdmin"
+               placeholder="admin@company.com" required />
+      </div>
+      <div class="form-group">
+        <label>Admin Password</label>
+        <input type="password" [(ngModel)]="form.password" name="password"
+               placeholder="Min 8 caracteres" required />
+      </div>
+
+      <button type="submit" class="btn btn-dark w-full" [disabled]="saving">
+        {{ saving ? 'Registrando…' : 'Commit Registration' }}
+      </button>
+
+      <p *ngIf="saveError" class="state error" style="padding: 0.5rem 0">{{ saveError }}</p>
+      <p *ngIf="saveSuccess" class="state" style="padding: 0.5rem 0; color: var(--color-success)">
+        {{ saveSuccess }}
+      </p>
+
+      <p class="hint mt-2">
+        Entity will be created in <strong>active</strong> status with default pool & admin role.
+      </p>
+    </form>
+  </div>
+
+  <!-- Active directory -->
+  <div class="panel directory-panel">
+    <div class="panel-header">
+      <div class="panel-title">Active Directory</div>
+      <button class="btn btn-outline btn-sm" (click)="refresh()">Refresh</button>
+    </div>
+
+    <ng-container *ngIf="loading">
+      <div class="state">Loading clients…</div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && loadError">
+      <div class="state error">{{ loadError }}</div>
+    </ng-container>
+
+    <table class="data-table" *ngIf="!loading && !loadError && empresas.length > 0">
+      <thead>
+        <tr>
+          <th>Client Info</th>
+          <th>Tax ID (NIT)</th>
+          <th>Status</th>
+          <th>Contact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of empresas" (click)="open(e.id)" style="cursor:pointer">
+          <td>
+            <strong>{{ e.nombre }}</strong>
+            <div style="font-size:0.7rem; color: var(--color-text-muted);">
+              ID: {{ e.id.substring(0, 10) }}
+            </div>
+          </td>
+          <td>{{ e.nit }}</td>
+          <td>
+            <span class="badge" [class]="'badge ' + status(e).color">
+              {{ status(e).label }}
+            </span>
+          </td>
+          <td>{{ e.emailContacto || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loading && empresas.length === 0 && !loadError" class="state">
+      Aún no hay empresas registradas.
+    </div>
+
+    <p class="hint mt-2" *ngIf="empresas.length > 0">
+      Showing {{ empresas.length }} client{{ empresas.length === 1 ? '' : 's' }}
+    </p>
+  </div>
+</div>
+
+<div class="bottom-strip">
+  <div class="strip-card">
+    <strong style="color:#fff">📊 TOTAL REGISTRY</strong>
+    <span class="strip-value">{{ empresas.length }}</span>
+    <span style="color:#cbd5e1; font-size:0.7rem">Clients in directory</span>
+  </div>
+  <div class="strip-card light">
+    <strong>Verification Flow Active</strong>
+    <span>Newly added clients will automatically enter the Compliance Review process designer.</span>
+  </div>
+</div>

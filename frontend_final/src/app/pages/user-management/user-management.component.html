@@ -1,92 +1,179 @@
 <header class="page-header">
-  <div class="header-titles">
-    <h1>User & Access Management</h1>
-    <p>Manage system users, roles, and enterprise affiliations.</p>
+  <div>
+    <h1>Access Control & Identities</h1>
+    <p class="subtitle">Manage system users, define granular roles, and audit permissions.</p>
   </div>
-  <div class="header-actions">
-    <button class="btn-outline">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-      Export CSV
-    </button>
-    <button class="btn-primary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-      Invite User
-    </button>
+  <div class="actions">
+    <button class="btn btn-outline">Export Data</button>
   </div>
 </header>
 
-<div class="kpi-row">
-  <div class="kpi-box">
-    <span class="kpi-title">TOTAL USERS</span>
-    <div class="kpi-value text-dark">{{ totalUsers }}</div>
-  </div>
-  <div class="kpi-box">
-    <span class="kpi-title">ACTIVE USERS</span>
-    <div class="kpi-value text-green">{{ activeUsers }}</div>
-  </div>
-  <div class="kpi-box">
-    <span class="kpi-title">PENDING INVITATIONS</span>
-    <div class="kpi-value text-blue">{{ pendingInvites }}</div>
-  </div>
-</div>
+<ng-container *ngIf="loading">
+  <div class="state">Loading users…</div>
+</ng-container>
 
-<div class="panel mb-4">
-  <div class="panel-header">
-    <div class="search-container">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" placeholder="Search by email..." [(ngModel)]="searchQuery">
+<ng-container *ngIf="!loading && error">
+  <div class="state error">{{ error }}</div>
+</ng-container>
+
+<ng-container *ngIf="empresa as e">
+  <!-- Top: users table + invite card -->
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Active Users</div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <input
+            type="text"
+            placeholder="Search…"
+            [(ngModel)]="searchQuery"
+            class="filter-input"
+          />
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User Identifier</th>
+            <th>System Email</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of filteredUsers">
+            <td>
+              <span class="avatar" style="margin-right:0.4rem;">{{ getInitials(u.email) }}</span>
+              <strong>{{ u.email.split('@')[0] }}</strong>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="badge" [class]="'badge ' + badgeForEstado(u.estado)">
+                ● {{ (u.estado || '—') | uppercase }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm">Edit</button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredUsers.length === 0">
+            <td colspan="4" class="state">No hay usuarios que coincidan con la búsqueda.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="hint mt-1">Showing {{ filteredUsers.length }} of {{ totalUsers }} registered users</p>
     </div>
-    <div class="filter-actions">
-      <button class="btn-filter"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filter</button>
+
+    <!-- Right: Invite + Pending -->
+    <div>
+      <div class="panel invite-card">
+        <strong>Invite Collaborators</strong>
+        <p class="subtitle" style="font-size:0.8rem; margin: 0.25rem 0 1rem 0;">
+          Send an onboarding link to new team members to grant them access.
+        </p>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" [(ngModel)]="inviteEmail" placeholder="colleague@company.com" />
+        </div>
+        <div class="form-group">
+          <label>Default Role</label>
+          <select [(ngModel)]="inviteRol">
+            <option>Editor</option>
+            <option>Viewer</option>
+            <option>Admin</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-full">Send Invitation</button>
+      </div>
+
+      <div class="panel mt-2">
+        <strong>Pending Invites</strong>
+        <p class="state" style="padding: 0.75rem 0">No pending invitations.</p>
+      </div>
     </div>
-  </div>
-  
-  <div class="error-banner" *ngIf="error">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-    {{ error }}
   </div>
 
-  <table class="user-table">
-    <thead>
-      <tr>
-        <th>USER / EMAIL</th>
-        <th>STATUS</th>
-        <th>ENTERPRISE ID</th>
-        <th>ROLE POOL</th>
-        <th>ACTIONS</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngIf="loading">
-        <td colspan="5" style="text-align: center; padding: 2rem;">Loading users...</td>
-      </tr>
-      <tr *ngFor="let user of filteredUsers">
-        <td>
-          <div class="user-cell">
-            <div class="avatar-initials">{{ getInitials(user.email) }}</div>
-            <div class="user-info">
-              <strong>{{ getDisplayEmail(user.email) }}</strong>
-              <span>{{ user.email || 'Sin correo' }}</span>
-            </div>
-          </div>
-        </td>
-        <td>
-          <span class="status-badge" [ngClass]="user.estado === 'ACTIVO' ? 'active' : 'pending'">{{ user.estado }}</span>
-        </td>
-        <td class="mono-text">{{ user.empresa_id || 'No asignada' }}</td>
-        <td>
-          <span class="role-tag">Standard Pool</span>
-        </td>
-        <td>
-          <div class="action-buttons">
-            <button class="icon-btn edit" title="Edit User"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-            <button class="icon-btn delete" title="Suspend User"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></button>
-          </div>
-        </td>
-      </tr>
-      <tr *ngIf="!loading && filteredUsers.length === 0">
-        <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">No users found matching your search.</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+  <!-- Role pool & matrix -->
+  <h3 style="margin: 1.5rem 0 0.75rem 0;">Role Pool & Matrix</h3>
+  <p class="subtitle" style="margin-bottom: 1rem;">
+    Configure access levels for the enterprise directory.
+  </p>
+
+  <div class="role-cards">
+    <div class="panel role-card">
+      <span class="badge blue mb-1">FULL ACCESS</span>
+      <strong>Super Administrator</strong>
+      <p class="subtitle" style="font-size:0.75rem;">
+        Complete authority over user provisioning, system configuration, and data auditing.
+      </p>
+      <div class="perm-tags">
+        <span class="badge gray">user.write</span>
+        <span class="badge gray">sys.config</span>
+        <span class="badge gray">billing.view</span>
+        <span class="badge gray">+12 more</span>
+      </div>
+    </div>
+
+    <div class="panel role-card">
+      <span class="badge green mb-1">WRITE ACCESS</span>
+      <strong>Process Editor</strong>
+      <p class="subtitle" style="font-size:0.75rem;">
+        Ability to create and modify business workflows, but cannot manage other users.
+      </p>
+      <div class="perm-tags">
+        <span class="badge gray">flow.edit</span>
+        <span class="badge gray">data.upload</span>
+        <span class="badge gray">report.run</span>
+      </div>
+    </div>
+
+    <div class="panel role-card">
+      <span class="badge gray mb-1">READ ONLY</span>
+      <strong>Stakeholder</strong>
+      <p class="subtitle" style="font-size:0.75rem;">
+        Restricted to monitoring performance metrics and viewing finalized flow documentation.
+      </p>
+      <div class="perm-tags">
+        <span class="badge gray">flow.view</span>
+        <span class="badge gray">dashboard.view</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission matrix -->
+  <h3 style="margin: 1.5rem 0 0.75rem 0;">Detailed Permissions Matrix</h3>
+  <div class="panel" style="padding:0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Module / Permission</th>
+          <th>Admin</th>
+          <th>Editor</th>
+          <th>Viewer</th>
+          <th>API Service</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>User Identity Management</td>
+          <td>✓</td><td>—</td><td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>Workflow Execution</td>
+          <td>✓</td><td>✓</td><td>—</td><td>✓</td>
+        </tr>
+        <tr>
+          <td>Data Analytics & Reports</td>
+          <td>✓</td><td>—</td><td>✓</td><td>✓</td>
+        </tr>
+        <tr>
+          <td>Infrastructure Settings</td>
+          <td>✓</td><td>—</td><td>—</td><td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</ng-container>

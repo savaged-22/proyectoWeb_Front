@@ -1,0 +1,130 @@
+<header class="page-header">
+  <div>
+    <h1>Procesos</h1>
+    <p class="subtitle">
+      Manage and configure operational workflows for the enterprise core.
+    </p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline">Import</button>
+    <a routerLink="/app/processes/new" class="btn btn-primary">+ Create New Process</a>
+  </div>
+</header>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Procesos</div>
+    <div class="kpi-value">{{ total }}</div>
+    <div class="kpi-trend muted">↑ Live count</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Active</div>
+    <div class="kpi-value">{{ totalActivos }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Shared Processes</div>
+    <div class="kpi-value">{{ totalCompartidos }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Utilization</div>
+    <div class="kpi-value">{{ utilizacion }}%</div>
+  </div>
+</div>
+
+<!-- Filters bar -->
+<div class="panel" style="padding: 0.75rem 1rem; margin-bottom: 1rem;">
+  <div class="row gap-2" style="align-items:center; flex-wrap:wrap;">
+    <select [(ngModel)]="filterCategoria" (change)="applyFilters()" class="filter-select">
+      <option value="">All Categories</option>
+      <option value="finanzas">Finanzas</option>
+      <option value="operaciones">Operaciones</option>
+      <option value="rrhh">RRHH</option>
+      <option value="legal">Legal</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <select [(ngModel)]="filterEstado" (change)="applyFilters()" class="filter-select">
+      <option value="">Status: All</option>
+      <option value="borrador">Borrador</option>
+      <option value="activo">Activo</option>
+      <option value="publicado">Publicado</option>
+      <option value="archivado">Archivado</option>
+    </select>
+
+    <div style="flex:1; display:flex; gap:0.5rem;">
+      <input
+        type="text"
+        placeholder="Search by name…"
+        [(ngModel)]="searchNombre"
+        (keyup.enter)="applyFilters()"
+        style="flex:1; padding:0.4rem 0.75rem; border:1px solid var(--color-border); border-radius:6px;"
+      />
+      <button class="btn btn-outline btn-sm" (click)="applyFilters()">Filter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="panel" style="padding: 0;">
+  <ng-container *ngIf="loading">
+    <div class="state">Loading processes…</div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && error">
+    <div class="state error">{{ error }}</div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && !error">
+    <table class="data-table" *ngIf="procesos.length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Pool</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Creator</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of procesos">
+          <td>
+            <strong>{{ p.nombre }}</strong>
+            <div style="font-size:0.7rem; color: var(--color-text-muted);">
+              ID: {{ p.id.substring(0, 8) }}
+            </div>
+          </td>
+          <td>{{ p.poolNombre }}</td>
+          <td>
+            <span class="badge gray">{{ p.categoria || '—' }}</span>
+          </td>
+          <td>
+            <span class="badge" [class]="'badge ' + badgeForEstado(p.estado)">
+              ● {{ p.estado || '—' }}
+            </span>
+          </td>
+          <td>
+            <span class="avatar" style="margin-right: 0.4rem;">
+              {{ (p.creadoPorEmail || '?').charAt(0).toUpperCase() }}
+            </span>
+            {{ p.creadoPorEmail }}
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="state">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">📋</div>
+        No hay procesos registrados aún.
+        <div class="mt-1">
+          <a routerLink="/app/processes/new" class="btn btn-primary btn-sm">Create your first process</a>
+        </div>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

@@ -1,71 +1,88 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-interface RolPool {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  esPropietario: boolean;
-  usuariosCount: number;
-}
-
-interface Permiso {
-  modulo: string;
-  accion: string;
-  permitido: boolean;
-}
+import { Pool } from '../../core/models/pool';
+import { Permiso, RolPool } from '../../core/models/rol-pool';
+import { PoolService } from '../../services/pool.service';
+import { RolPoolService } from '../../services/rol-pool.service';
 
 @Component({
   selector: 'app-permissions',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './permissions.component.html',
-  styleUrls: ['./permissions.component.css']
+  styleUrls: ['./permissions.component.css'],
 })
 export class PermissionsComponent implements OnInit {
+  private poolService = inject(PoolService);
+  private rolPoolService = inject(RolPoolService);
+
+  pools: Pool[] = [];
+  selectedPool?: Pool;
+
   roles: RolPool[] = [];
-  selectedRole: RolPool | null = null;
-  permisos: Permiso[] = [];
+  selectedRole?: RolPool;
+  catalogoPermisos: Permiso[] = [];
 
-  ngOnInit() {
-    this.roles = [
-      { id: '1', nombre: 'Propietario', descripcion: 'Acceso total al sistema y configuración de empresa.', esPropietario: true, usuariosCount: 1 },
-      { id: '2', nombre: 'Administrador de Finanzas', descripcion: 'Gestión de facturas, pagos y reportes.', esPropietario: false, usuariosCount: 3 },
-      { id: '3', nombre: 'Auditor de Operaciones', descripcion: 'Solo lectura de procesos y logs de auditoría.', esPropietario: false, usuariosCount: 12 },
-      { id: '4', nombre: 'Operador de Soporte', descripcion: 'Atención a usuarios y gestión básica.', esPropietario: false, usuariosCount: 45 }
-    ];
-    this.selectRole(this.roles[0]);
+  loading = true;
+  error = '';
+
+  ngOnInit(): void {
+    this.poolService.listar().subscribe({
+      next: (pools) => {
+        this.pools = pools;
+        if (pools.length > 0) {
+          this.selectPool(pools[0]);
+        } else {
+          this.loading = false;
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.error = 'No se pudieron cargar los pools.';
+        this.loading = false;
+      },
+    });
   }
 
-  selectRole(role: RolPool) {
+  selectPool(pool: Pool): void {
+    this.selectedPool = pool;
+    this.loading = true;
+    this.error = '';
+
+    this.rolPoolService.listar(pool.id).subscribe({
+      next: (rs) => {
+        this.roles = rs;
+        if (rs.length > 0) this.selectRole(rs[0]);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.error = 'No se pudieron cargar los roles.';
+        this.loading = false;
+      },
+    });
+
+    this.rolPoolService.permisos(pool.id).subscribe({
+      next: (p) => (this.catalogoPermisos = p),
+      error: () => (this.catalogoPermisos = []),
+    });
+  }
+
+  selectRole(role: RolPool): void {
     this.selectedRole = role;
-    if (role.esPropietario) {
-      this.permisos = [
-        { modulo: 'Usuarios', accion: 'Crear, Editar, Eliminar', permitido: true },
-        { modulo: 'Configuración Empresa', accion: 'Todas las acciones', permitido: true },
-        { modulo: 'Facturación', accion: 'Todas las acciones', permitido: true },
-        { modulo: 'Procesos (BPM)', accion: 'Modelar y Ejecutar', permitido: true }
-      ];
-    } else if (role.nombre.includes('Finanzas')) {
-      this.permisos = [
-        { modulo: 'Facturación', accion: 'Crear, Editar, Eliminar', permitido: true },
-        { modulo: 'Reportes', accion: 'Generar', permitido: true },
-        { modulo: 'Usuarios', accion: 'Solo Lectura', permitido: false },
-        { modulo: 'Procesos (BPM)', accion: 'Sin Acceso', permitido: false }
-      ];
-    } else {
-      this.permisos = [
-        { modulo: 'Procesos (BPM)', accion: 'Solo Lectura', permitido: true },
-        { modulo: 'Usuarios', accion: 'Sin Acceso', permitido: false },
-        { modulo: 'Configuración Empresa', accion: 'Sin Acceso', permitido: false }
-      ];
-    }
   }
 
-  togglePermiso(perm: Permiso) {
-    if (this.selectedRole && !this.selectedRole.esPropietario) {
-      perm.permitido = !perm.permitido;
-    }
+  has(role: RolPool, codigo: string): boolean {
+    return role.permisos?.some((p) => p.codigo === codigo) ?? false;
+  }
+
+  get rolesPropietarios(): number {
+    return this.roles.filter((r) => r.esPropietario).length;
+  }
+
+  get rolesCustom(): number {
+    return this.roles.filter((r) => !r.esPropietario).length;
   }
 }

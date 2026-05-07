@@ -1,99 +1,124 @@
 <header class="page-header">
-  <div class="header-titles">
+  <div>
     <h1>Roles & Permissions</h1>
-    <p>Define access control lists (ACL) and manage enterprise role pools.</p>
+    <p class="subtitle">Define access control lists (ACL) and manage enterprise role pools.</p>
   </div>
-  <div class="header-actions">
-    <button class="btn-primary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"></path></svg>
-      Create Role Pool
-    </button>
+  <div class="actions">
+    <button class="btn btn-primary">+ Create Role Pool</button>
   </div>
 </header>
 
-<div class="kpi-row">
-  <div class="kpi-box">
-    <span class="kpi-title">TOTAL ROLE POOLS</span>
-    <div class="kpi-value text-dark">{{ roles.length }}</div>
+<!-- Pool selector -->
+<div class="panel mb-2" *ngIf="pools.length > 0">
+  <div class="panel-header">
+    <div class="panel-title">Pool</div>
   </div>
-  <div class="kpi-box">
-    <span class="kpi-title">SYSTEM ROLES</span>
-    <div class="kpi-value text-blue">1</div>
-  </div>
-  <div class="kpi-box">
-    <span class="kpi-title">CUSTOM ROLES</span>
-    <div class="kpi-value text-green">{{ roles.length - 1 }}</div>
+  <div class="pool-tabs">
+    <button
+      *ngFor="let p of pools"
+      [class.active]="selectedPool?.id === p.id"
+      (click)="selectPool(p)"
+    >
+      {{ p.nombre }}
+    </button>
   </div>
 </div>
 
-<div class="dashboard-split">
-  
-  <!-- Left Side: Role List -->
-  <div class="panel list-panel">
-    <div class="panel-header">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052cc" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Role Pools</h3>
+<ng-container *ngIf="loading">
+  <div class="state">Loading roles…</div>
+</ng-container>
+
+<ng-container *ngIf="!loading && error">
+  <div class="state error">{{ error }}</div>
+</ng-container>
+
+<ng-container *ngIf="!loading && !error && roles.length > 0">
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Role Pools</div>
+      <div class="kpi-value">{{ roles.length }}</div>
     </div>
-    <div class="role-list">
-      <div class="role-item" *ngFor="let role of roles" [ngClass]="{'active': selectedRole?.id === role.id}" (click)="selectRole(role)">
-        <div class="role-icon">
-          <svg *ngIf="role.esPropietario" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          <svg *ngIf="!role.esPropietario" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </div>
-        <div class="role-details">
-          <strong>{{ role.nombre }}</strong>
-          <span>{{ role.usuariosCount }} asignados</span>
-        </div>
-      </div>
+    <div class="kpi-card">
+      <div class="kpi-label">System Roles</div>
+      <div class="kpi-value">{{ rolesPropietarios }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Custom Roles</div>
+      <div class="kpi-value">{{ rolesCustom }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Permisos disponibles</div>
+      <div class="kpi-value">{{ catalogoPermisos.length }}</div>
     </div>
   </div>
 
-  <!-- Right Side: Permissions Detail -->
-  <div class="panel detail-panel" *ngIf="selectedRole">
-    <div class="panel-header detail-header">
-      <div>
-        <h3>{{ selectedRole.nombre }}</h3>
-        <p>{{ selectedRole.descripcion }}</p>
+  <div class="split">
+    <!-- Roles list -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Roles del pool</div>
       </div>
-      <span class="badge" [ngClass]="selectedRole.esPropietario ? 'badge-warning' : 'badge-gray'">
-        {{ selectedRole.esPropietario ? 'System (Immutable)' : 'Custom Role' }}
-      </span>
-    </div>
-    
-    <div class="permissions-container">
-      <div class="perm-section">
-        <h4 class="section-heading">Module Access Matrix</h4>
-        <table class="perm-table">
-          <thead>
-            <tr>
-              <th>MODULE</th>
-              <th>ACCESS LEVEL</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let perm of permisos">
-              <td><strong>{{ perm.modulo }}</strong></td>
-              <td class="text-gray">{{ perm.accion }}</td>
-              <td>
-                <div class="toggle-switch" 
-                     [ngClass]="{'on': perm.permitido, 'off': !perm.permitido, 'disabled': selectedRole.esPropietario}"
-                     (click)="togglePermiso(perm)">
-                  <div class="toggle-knob"></div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p *ngIf="selectedRole.esPropietario" style="font-size: 0.75rem; color: #94a3b8; margin-top: 1rem;">
-          * Los permisos del rol Propietario no pueden ser modificados.
-        </p>
+      <div class="role-list">
+        <div
+          class="role-item"
+          *ngFor="let r of roles"
+          [class.active]="selectedRole?.id === r.id"
+          (click)="selectRole(r)"
+        >
+          <div class="role-icon" [class.owner]="r.esPropietario">
+            {{ r.esPropietario ? '★' : '👤' }}
+          </div>
+          <div class="role-details">
+            <strong>{{ r.nombre }}</strong>
+            <span>{{ r.permisos.length }} permisos</span>
+          </div>
+        </div>
       </div>
     </div>
-    
-    <div class="panel-footer" *ngIf="!selectedRole.esPropietario">
-      <button class="btn-primary">Save Changes</button>
-      <button class="btn-outline text-red">Delete Role</button>
+
+    <!-- Detail of selected role -->
+    <div class="panel" *ngIf="selectedRole as r">
+      <div class="panel-header" style="align-items:flex-start;">
+        <div>
+          <strong style="font-size:1rem">{{ r.nombre }}</strong>
+          <p class="subtitle" style="font-size:0.8rem;">{{ r.descripcion || '—' }}</p>
+        </div>
+        <span class="badge" [class]="r.esPropietario ? 'badge amber' : 'badge gray'">
+          {{ r.esPropietario ? 'System (Immutable)' : 'Custom Role' }}
+        </span>
+      </div>
+
+      <h4 class="section-heading">Module Access Matrix</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Permiso</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of catalogoPermisos">
+            <td><strong>{{ p.codigo }}</strong></td>
+            <td>{{ p.descripcion }}</td>
+            <td>
+              <span class="badge" [class]="has(r, p.codigo) ? 'badge green' : 'badge gray'">
+                {{ has(r, p.codigo) ? '● ALLOWED' : '○ DENIED' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="catalogoPermisos.length === 0">
+            <td colspan="3" class="state">Sin permisos en el catálogo.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+</ng-container>
 
-</div>
+<ng-container *ngIf="!loading && roles.length === 0 && !error">
+  <div class="state">
+    No tienes pools con roles configurados todavía.
+  </div>
+</ng-container>

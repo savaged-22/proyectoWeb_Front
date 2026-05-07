@@ -1,0 +1,104 @@
+<header class="page-header">
+  <div>
+    <h1>Client Portfolio</h1>
+    <p class="subtitle">High-level operational overview across all provisioned instances.</p>
+  </div>
+  <div class="actions">
+    <a routerLink="/app/clients" class="btn btn-primary">+ Provision Client</a>
+  </div>
+</header>
+
+<ng-container *ngIf="loading">
+  <div class="state">Loading portfolio…</div>
+</ng-container>
+
+<ng-container *ngIf="!loading && error">
+  <div class="state error">{{ error }}</div>
+</ng-container>
+
+<ng-container *ngIf="!loading && !error">
+  <!-- Top KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Entities</div>
+      <div class="kpi-value">{{ stats?.totalEmpresas ?? empresas.length }}</div>
+      <div class="kpi-trend">↑ Live</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Users</div>
+      <div class="kpi-value">{{ stats?.totalUsuarios ?? 0 }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Running Processes</div>
+      <div class="kpi-value">{{ stats?.totalProcesos ?? 0 }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Portfolio Health</div>
+      <div class="kpi-value">99.8%</div>
+      <div class="kpi-trend">○ Stable</div>
+    </div>
+  </div>
+
+  <!-- Filters strip (visual) -->
+  <div class="panel" style="padding: 0.75rem 1rem; margin-bottom: 1rem; display:flex; align-items:center; gap:0.75rem;">
+    <strong style="font-size: 0.85rem;">FILTERS</strong>
+    <span class="badge gray">All Subscription Tiers</span>
+    <span class="badge gray">Status: All</span>
+    <div style="margin-left:auto; font-size:0.8rem; color: var(--color-text-muted);">
+      Sort by: Recent Activity ▾
+    </div>
+  </div>
+
+  <!-- Cards grid -->
+  <div class="cards-grid" *ngIf="empresas.length > 0; else emptyState">
+    <div
+      *ngFor="let e of empresas"
+      class="client-card"
+      (click)="open(e.id)"
+      role="button"
+      tabindex="0"
+    >
+      <div class="card-top">
+        <div class="card-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+        <div class="card-id">
+          <strong>{{ e.nombre }}</strong>
+          <span>ID: {{ e.id.substring(0, 8) }}</span>
+        </div>
+        <span class="badge" [class]="'badge ' + tier(e).color">{{ tier(e).label }}</span>
+      </div>
+
+      <div class="card-stats">
+        <div>
+          <span class="stat-label">USERS</span>
+          <span class="stat-value">{{ e.totalUsuarios }}</span>
+        </div>
+        <div>
+          <span class="stat-label">PROCESSES</span>
+          <span class="stat-value">{{ e.totalProcesos }}</span>
+        </div>
+        <div>
+          <span class="stat-label">STATUS</span>
+          <span class="stat-value">
+            <span class="badge" [class]="'badge ' + status(e).color">
+              ● {{ status(e).label }}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div class="card-foot">
+        <span>Created: {{ e.createdAt | date:'mediumDate' }}</span>
+        <a (click)="$event.stopPropagation(); open(e.id)" class="manage-link">MANAGE CONTEXT →</a>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="state">
+      No hay empresas registradas todavía.
+      <div class="mt-1">
+        <a routerLink="/app/clients" class="btn btn-primary btn-sm">Register first client</a>
+      </div>
+    </div>
+  </ng-template>
+</ng-container>

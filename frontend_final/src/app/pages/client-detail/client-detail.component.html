@@ -1,0 +1,132 @@
+<nav class="breadcrumb">
+  <a routerLink="/app/clients">Client Directory</a>
+  <span>/</span>
+  <span class="current">Client Profile</span>
+</nav>
+
+<ng-container *ngIf="loading">
+  <div class="state">Loading client…</div>
+</ng-container>
+
+<ng-container *ngIf="!loading && error">
+  <div class="state error">{{ error }}</div>
+</ng-container>
+
+<ng-container *ngIf="empresa as e">
+  <!-- Top: identity card + compliance card -->
+  <div class="top-grid">
+    <div class="panel">
+      <span class="badge blue mb-1">ACTIVE ACCOUNT</span>
+      <h2 style="margin:0.5rem 0 0.25rem 0">{{ e.nombre }}</h2>
+      <p class="subtitle" style="color:var(--color-text-muted); font-size:0.85rem; margin:0 0 1.25rem 0;">
+        Strategic partner for intermodal shipping and regional hub management — operational tracking enabled.
+      </p>
+
+      <div class="info-row">
+        <div>
+          <span class="info-label">Tax ID (NIT)</span>
+          <span class="info-value">{{ e.nit }}</span>
+        </div>
+        <div>
+          <span class="info-label">Primary Contact</span>
+          <span class="info-value">{{ e.emailContacto || '—' }}</span>
+        </div>
+        <div>
+          <span class="info-label">Created</span>
+          <span class="info-value">{{ e.createdAt | date:'mediumDate' }}</span>
+        </div>
+        <div>
+          <span class="info-label">Instance</span>
+          <span class="info-value">Tier 4 Enterprise</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel compliance-panel">
+      <div class="panel-title" style="color:#fff">Compliance Matrix</div>
+      <p style="color:#cbd5e1; font-size:0.8rem; margin:0.5rem 0 1rem 0;">
+        All audit checks passed for current cycle.
+      </p>
+
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="85"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-top:0.5rem;">
+        <span>OPERATIONAL HEALTH</span>
+        <span style="color:#fff; font-weight:700">85%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Registry -->
+  <div class="panel mt-2">
+    <div class="panel-header">
+      <div class="panel-title">
+        User Registry
+        <span class="badge gray" style="margin-left:0.5rem">{{ e.totalUsuarios }} USERS</span>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <input
+          type="text"
+          placeholder="Filter users…"
+          [(ngModel)]="filterText"
+          class="filter-input"
+          name="filterText"
+        />
+        <button class="btn btn-primary btn-sm">+ Provision User</button>
+      </div>
+    </div>
+
+    <table class="data-table" *ngIf="filteredUsuarios.length > 0; else noUsers">
+      <thead>
+        <tr>
+          <th>User Identity</th>
+          <th>Pool Roles</th>
+          <th>Security Status</th>
+          <th>Last Activity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filteredUsuarios">
+          <td>
+            <span class="avatar" style="margin-right: 0.5rem;">{{ initials(u.email) }}</span>
+            <strong>{{ u.email }}</strong>
+          </td>
+          <td>
+            <span class="badge blue">{{ u.rolPrincipal }}</span>
+          </td>
+          <td>
+            <span class="badge" [class]="'badge ' + badgeForEstado(u.estado)">
+              ● {{ u.estado || '—' | uppercase }}
+            </span>
+          </td>
+          <td>{{ u.createdAt | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #noUsers>
+      <div class="state">No hay usuarios que coincidan con el filtro.</div>
+    </ng-template>
+  </div>
+
+  <!-- Footer KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Pools</div>
+      <div class="kpi-value">{{ e.totalPools }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Procesos</div>
+      <div class="kpi-value">{{ e.totalProcesos }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Roles definidos</div>
+      <div class="kpi-value">{{ e.totalRolesPool }}</div>
+    </div>
+    <div class="kpi-card primary">
+      <div class="kpi-label" style="color:rgba(255,255,255,0.8)">Resource usage</div>
+      <div class="kpi-value" style="color:#fff">45GB</div>
+    </div>
+  </div>
+</ng-container>

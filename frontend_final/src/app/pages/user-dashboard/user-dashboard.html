@@ -1,193 +1,115 @@
-<!-- Header Area -->
-      <header class="page-header">
-        <div class="header-titles">
-          <h1>Operational Command</h1>
-          <p>Real-time infrastructure performance and audit summary.</p>
-        </div>
-        <div class="header-actions">
-          <button class="btn-outline">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Last 24 Hours
-          </button>
-          <button class="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Export Report
-          </button>
-        </div>
-      </header>
+<header class="page-header">
+  <div>
+    <h1>Operational Command</h1>
+    <p class="subtitle">Real-time infrastructure performance and audit summary.</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline">Last 24 Hours</button>
+    <button class="btn btn-primary">Export Report</button>
+  </div>
+</header>
 
-      <!-- KPI Cards -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
-            <span class="badge badge-green">+12% vs last week</span>
-          </div>
-          <div class="kpi-label">ACTIVE PROCESSES</div>
-          <div class="kpi-value">1,284 <span>proceso</span></div>
-        </div>
+<ng-container *ngIf="loading">
+  <div class="state">Loading dashboard…</div>
+</ng-container>
 
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon dark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-            <span class="status-text">Stable</span>
-          </div>
-          <div class="kpi-label">TOTAL USERS</div>
-          <div class="kpi-value">42,093 <span>usuario</span></div>
-        </div>
+<ng-container *ngIf="!loading && error">
+  <div class="state error">{{ error }}</div>
+</ng-container>
 
-        <div class="kpi-card">
-          <div class="kpi-top">
-            <div class="kpi-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-            <span class="status-text text-red">Action Required</span>
-          </div>
-          <div class="kpi-label">PENDING INVITATIONS</div>
-          <div class="kpi-value">156 <span>invitacion_usuario</span></div>
+<ng-container *ngIf="empresa as e">
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Active Processes</div>
+      <div class="kpi-value">{{ e.totalProcesos }}</div>
+      <div class="kpi-trend">↑ proceso</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Users</div>
+      <div class="kpi-value">{{ e.totalUsuarios }}</div>
+      <div class="kpi-trend muted">Stable · usuario</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Pools</div>
+      <div class="kpi-value">{{ e.totalPools }}</div>
+      <div class="kpi-trend muted">pools</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Roles configurados</div>
+      <div class="kpi-value">{{ e.totalRolesPool }}</div>
+      <div class="kpi-trend muted">rol_pool</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="dash-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Equipo de la empresa</div>
+        <a routerLink="/app/users" class="manage-link">Manage users →</a>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of e.usuarios">
+            <td>
+              <span class="avatar" style="margin-right: 0.4rem;">
+                {{ (u.email || '?').charAt(0).toUpperCase() }}
+              </span>
+              {{ u.email }}
+            </td>
+            <td><span class="badge blue">{{ u.rolPrincipal }}</span></td>
+            <td><span class="badge green">● {{ u.estado | uppercase }}</span></td>
+            <td>{{ u.createdAt | date:'short' }}</td>
+          </tr>
+          <tr *ngIf="e.usuarios.length === 0">
+            <td colspan="4" class="state">Aún no hay usuarios en la empresa.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel company-card">
+      <strong style="font-size:1.1rem">{{ e.nombre }}</strong>
+      <span style="color:#cbd5e1; font-size:0.85rem">Enterprise Infrastructure Entity</span>
+
+      <div class="ic-grid">
+        <div>
+          <span class="ic-label">NIT</span>
+          <span class="ic-value">{{ e.nit }}</span>
+        </div>
+        <div>
+          <span class="ic-label">Contacto</span>
+          <span class="ic-value">{{ e.emailContacto || '—' }}</span>
         </div>
       </div>
 
-      <!-- Main Layout Grid -->
-      <div class="dashboard-split">
-        <!-- Audit Table -->
-        <div class="panel table-panel">
-          <div class="panel-header">
-            <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Recent Audit Logs</h3>
-            <a href="#" class="view-all">View All Logs</a>
-          </div>
-          <table class="audit-table">
-            <thead>
-              <tr>
-                <th>USER</th>
-                <th>ENTITY</th>
-                <th>ACTION</th>
-                <th>TIMESTAMP</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-initials">JD</div>
-                    <div class="user-info">
-                      <strong>Jane Doe</strong>
-                      <span>Admin</span>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="entity-tag">public.proceso</span></td>
-                <td><span class="action-dot blue"></span> UPDATE_STATUS</td>
-                <td class="timestamp">2023-10-24<br>14:22:10</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-initials">MS</div>
-                    <div class="user-info">
-                      <strong>Mark Smith</strong>
-                      <span>Operator</span>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="entity-tag">public.usuario</span></td>
-                <td><span class="action-dot green"></span> CREATE_USER</td>
-                <td class="timestamp">2023-10-24<br>13:45:12</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-initials">AL</div>
-                    <div class="user-info">
-                      <strong>Alex Lee</strong>
-                      <span>System</span>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="entity-tag">public.empresa</span></td>
-                <td><span class="action-dot red"></span> DELETE_CONFIG</td>
-                <td class="timestamp">2023-10-24<br>11:10:05</td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-initials">RJ</div>
-                    <div class="user-info">
-                      <strong>Rob Johnson</strong>
-                      <span>Admin</span>
-                    </div>
-                  </div>
-                </td>
-                <td><span class="entity-tag">public.invitacion_usuario</span></td>
-                <td><span class="action-dot blue"></span> SEND_INVITE</td>
-                <td class="timestamp">2023-10-24<br>09:32:44</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="uptime-block">
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem">
+          <span style="color:#cbd5e1">SYSTEM UPTIME</span>
+          <span style="color:#fff; font-weight:700">99.99%</span>
         </div>
+        <div class="bar"><div class="fill" style="width:99%"></div></div>
 
-        <!-- Right Panels -->
-        <div class="right-column">
-          <!-- Company Card -->
-          <div class="panel company-panel">
-            <div class="company-header" style="background-image: url('/company_header.png')">
-              <div class="header-overlay"></div>
-              <div class="company-title">
-                <h2>Global Core Corp</h2>
-                <p>Enterprise Infrastructure Entity</p>
-              </div>
-            </div>
-            <div class="company-body">
-              <div class="company-stats">
-                <div class="stat-box">
-                  <span>REGION</span>
-                  <strong>EMEA Central</strong>
-                </div>
-                <div class="stat-box">
-                  <span>NODES</span>
-                  <strong>12 Clusters</strong>
-                </div>
-              </div>
-              
-              <div class="progress-section">
-                <div class="progress-labels">
-                  <span>System Uptime</span>
-                  <span class="text-green">99.99%</span>
-                </div>
-                <div class="progress-bar"><div class="fill green" style="width: 100%"></div></div>
-              </div>
-
-              <div class="progress-section">
-                <div class="progress-labels">
-                  <span>License Usage</span>
-                  <strong>42,093 / 50,000</strong>
-                </div>
-                <div class="progress-bar"><div class="fill blue" style="width: 84%"></div></div>
-              </div>
-
-              <button class="btn-outline w-full mt-4">Manage Company Profile</button>
-            </div>
-          </div>
-
-          <!-- Map Card -->
-          <div class="panel map-panel">
-            <div class="panel-header map-header">
-              <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052cc" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Primary Data Center Location</h3>
-            </div>
-            <div class="map-container">
-              <img src="/map_placeholder.png" alt="Data Center Map">
-            </div>
-          </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-top:0.5rem">
+          <span style="color:#cbd5e1">LICENSE USAGE</span>
+          <span style="color:#fff; font-weight:700">{{ e.totalUsuarios }}/50,000</span>
         </div>
+        <div class="bar"><div class="fill" [style.width.%]="(e.totalUsuarios / 50000) * 100"></div></div>
       </div>
 
-      <!-- Footer Area -->
-      <footer class="content-footer">
-        <div class="footer-left">
-          <strong>BPM Command v4.2.1-stable</strong>
-          <span>© 2023 Enterprise Infrastructure Systems</span>
-        </div>
-        <div class="footer-right">
-          <a href="#">Security Policy</a>
-          <a href="#">API Reference</a>
-          <a href="#">Docs</a>
-        </div>
-      </footer>
+      <a [routerLink]="['/app/clients', e.id]" class="btn btn-outline w-full" style="background:#fff; margin-top:1rem">
+        Manage Company Profile
+      </a>
+    </div>
+  </div>
+</ng-container>

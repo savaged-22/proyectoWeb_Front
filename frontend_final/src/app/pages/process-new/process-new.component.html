@@ -1,0 +1,160 @@
+<nav class="breadcrumb">
+  <a routerLink="/app/processes">Process Designer</a>
+  <span>/</span>
+  <span class="current">New Process</span>
+</nav>
+
+<header class="page-header">
+  <div>
+    <h1>Initialize New Workflow</h1>
+    <p class="subtitle">
+      Define the core parameters and logical hierarchy for the new BPM instance.
+    </p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" (click)="submit()" [disabled]="saving">
+      {{ saving ? 'Creating…' : 'Create Process' }}
+    </button>
+  </div>
+</header>
+
+<form (ngSubmit)="submit()" class="workflow-grid">
+  <!-- Left column -->
+  <div class="col-main">
+    <!-- Process Identity -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Process Identity
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Process Name</label>
+        <input
+          type="text"
+          [(ngModel)]="nombre"
+          name="nombre"
+          placeholder="e.g. Employee Onboarding Flow"
+          required
+        />
+        <div class="hint">Unique identifier used across the enterprise orchestration layer.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea
+          [(ngModel)]="descripcion"
+          name="descripcion"
+          rows="4"
+          placeholder="Describe the purpose, trigger conditions, and expected outcomes…"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Operational Logic -->
+    <div class="panel mt-2">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Operational Logic
+        </div>
+      </div>
+
+      <div class="row gap-2">
+        <div class="form-group col">
+          <label>Category</label>
+          <select [(ngModel)]="categoria" name="categoria">
+            <option value="admin">Admin</option>
+            <option value="finanzas">Finanzas</option>
+            <option value="operaciones">Operaciones</option>
+            <option value="rrhh">RRHH</option>
+            <option value="legal">Legal</option>
+          </select>
+        </div>
+
+        <div class="form-group col">
+          <label>Priority Level</label>
+          <div class="priority-toggle">
+            <button type="button" [class.active]="prioridad === 'low'"     (click)="prioridad='low'">LOW</button>
+            <button type="button" [class.active]="prioridad === 'medium'"  (click)="prioridad='medium'">MEDIUM</button>
+            <button type="button" [class.active]="prioridad === 'high'"    (click)="prioridad='high'">HIGH</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="saveError" class="state error mt-2">{{ saveError }}</div>
+
+    <div class="bottom-strip mt-3">
+      <div class="strip-card">
+        <strong>✓ Compliance Check</strong>
+        <span>Automated SOC2 audit tracking enabled.</span>
+      </div>
+      <div class="strip-card">
+        <strong>✦ AI Suggestion</strong>
+        <span>Use "{{ categoria | titlecase }}" category for HR workflows.</span>
+      </div>
+      <div class="strip-card">
+        <strong>⟲ Version Control</strong>
+        <span>Process will start at v1.0.0-draft.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div class="col-side">
+    <!-- Parent Pool -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Parent Pool
+        </div>
+      </div>
+      <p class="hint mb-1">Select the logical container for this process.</p>
+
+      <div *ngIf="loadingPools" class="state">Loading pools…</div>
+      <div *ngIf="poolsError" class="state error">{{ poolsError }}</div>
+
+      <div class="pool-list" *ngIf="!loadingPools && !poolsError">
+        <label
+          *ngFor="let p of pools"
+          class="pool-option"
+          [class.selected]="poolIdSeleccionado === p.id"
+        >
+          <input
+            type="radio"
+            name="pool"
+            [value]="p.id"
+            [(ngModel)]="poolIdSeleccionado"
+          />
+          <div>
+            <strong>{{ p.nombre }}</strong>
+            <div class="pool-id">ID: {{ p.id.substring(0, 12) }}</div>
+          </div>
+        </label>
+        <p *ngIf="pools.length === 0" class="hint">
+          No tienes pools registrados todavía.
+        </p>
+      </div>
+    </div>
+
+    <!-- Architecture preview -->
+    <div class="panel preview-panel mt-2">
+      <div class="panel-title" style="color:#fff">Architecture Preview</div>
+      <div class="preview-canvas">
+        <span class="preview-pool">Pool</span>
+        <span class="preview-arrow">—</span>
+        <span class="preview-start">START</span>
+        <span class="preview-arrow">—</span>
+        <span class="preview-dot">…</span>
+      </div>
+      <p class="hint" style="color:#cbd5e1; margin-top:0.75rem;">
+        Live visualization will generate after identity fields are completed.
+      </p>
+    </div>
+  </div>
+</form>

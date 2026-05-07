@@ -30,25 +30,16 @@ export class LoginPage {
       this.errorMessage = '';
       
       this.authService.login(this.loginForm.value).subscribe({
-        next: (response) => {
+        next: () => {
+          // saveSession ya se ejecutó en el tap del AuthService
           this.isLoading = false;
-          console.log('Login success', response);
-          if (response.token) {
-             localStorage.setItem('token', response.token);
-             if (response.role) {
-                localStorage.setItem('role', response.role);
-             }
-          }
-          
-          // Por petición, simplificamos el flujo para continuar con el frontend
-          // Todos los usuarios (independientemente de su rol) van a la pantalla común
-          this.router.navigate(['/user-dashboard']);
+          this.router.navigate(['/app/dashboard']);
         },
         error: (err) => {
           this.isLoading = false;
           this.errorMessage = err.error?.error || 'Error de conexión. Verifica tus credenciales.';
           console.error('Login error', err);
-        }
+        },
       });
     } else {
       this.loginForm.markAllAsTouched();

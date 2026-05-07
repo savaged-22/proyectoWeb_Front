@@ -1,0 +1,58 @@
+.breadcrumb {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.breadcrumb a { color: var(--color-primary); text-decoration: none; }
+.breadcrumb .current { color: var(--color-primary); font-weight: 600; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.directory-panel { padding: 1.25rem; }
+.directory-panel .data-table { margin-top: 0.5rem; }
+
+.bottom-strip {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+}
+.strip-card {
+  background: var(--color-primary);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.strip-card .strip-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.strip-card.light {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.strip-card.light strong {
+  color: var(--color-text-strong);
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+.strip-card.light span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.w-full { width: 100%; }

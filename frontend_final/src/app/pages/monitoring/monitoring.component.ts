@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
+import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-monitoring',
   standalone: true,
@@ -11,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class MonitoringComponent implements OnInit {
   private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
 
   messages: any[] = [];
   subscriptions: any[] = [];
@@ -29,7 +32,7 @@ export class MonitoringComponent implements OnInit {
   }
 
   fetchDashboardData() {
-    this.http.get<any>('http://localhost:8081/api/mensajes/dashboard').subscribe({
+    this.http.get<any>(`${this.apiUrl}/mensajes/dashboard`).subscribe({
       next: (data) => {
         if (data.mensajes) {
           this.messages = data.mensajes.map((m: any) => ({
@@ -87,7 +90,7 @@ export class MonitoringComponent implements OnInit {
   }
 
   seedData() {
-    this.http.post('http://localhost:8081/api/mensajes/seed', {}, { responseType: 'text' }).subscribe({
+    this.http.post(`${this.apiUrl}/mensajes/seed`, {}, { responseType: 'text' }).subscribe({
       next: (res) => {
         alert(res);
         this.fetchDashboardData();
