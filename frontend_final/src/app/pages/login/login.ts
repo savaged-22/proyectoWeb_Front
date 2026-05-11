@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import type { LoginResponse } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -30,19 +31,10 @@ export class LoginPage {
       this.errorMessage = '';
       
       this.authService.login(this.loginForm.value).subscribe({
-        next: (response) => {
+        next: (_response: LoginResponse) => {
           this.isLoading = false;
-          console.log('Login success', response);
-          if (response.token) {
-             localStorage.setItem('token', response.token);
-             if (response.role) {
-                localStorage.setItem('role', response.role);
-             }
-          }
-          
-          // Por petición, simplificamos el flujo para continuar con el frontend
-          // Todos los usuarios (independientemente de su rol) van a la pantalla común
-          this.router.navigate(['/user-dashboard']);
+          // token, usuarioId, empresaId y poolId ya fueron guardados en AuthService via tap()
+          this.router.navigate(['/app/dashboard']);
         },
         error: (err) => {
           this.isLoading = false;

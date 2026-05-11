@@ -10,6 +10,8 @@ import { LayoutComponent } from './layout/layout.component';
 import { MonitoringComponent } from './pages/monitoring/monitoring.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { PermissionsComponent } from './pages/permissions/permissions.component';
+import { ProcessBuilderComponent } from './pages/process-builder/process-builder.component';
+import { ProcessListComponent } from './pages/process-list/process-list.component';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
@@ -19,12 +21,19 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     canActivate: [authGuard, adminGuard] 
   },
+  {
+    path: 'process-builder',
+    component: ProcessBuilderComponent,
+    canActivate: [authGuard]
+  },
   { 
     path: 'app', 
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: UserDashboardComponent },
+      { path: 'processes', component: ProcessListComponent },
+      { path: 'process-builder', component: ProcessBuilderComponent },
       { path: 'monitoring', component: MonitoringComponent },
       { path: 'users', component: UserManagementComponent },
       { path: 'permissions', component: PermissionsComponent },
