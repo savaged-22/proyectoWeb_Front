@@ -1,0 +1,86 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Organization Processes</h1>
+      <p>Manage and monitor all business processes for your company.</p>
+    </div>
+    <button class="btn-primary" [routerLink]="['/app/process-builder']">
+      <i class="fas fa-plus"></i> New Process
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading && !errorMsg">
+    <div class="spinner"></div>
+    <p>Loading processes...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-banner" *ngIf="!isLoading && errorMsg">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMsg }}
+    <button (click)="cargarProcesos()">Retry</button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && procesos.length === 0 && !errorMsg">
+    <div class="empty-icon">
+      <i class="fas fa-project-diagram"></i>
+    </div>
+    <h2>No processes found</h2>
+    <p>Get started by creating your first business process.</p>
+    <button class="btn-secondary" [routerLink]="['/app/process-builder']">Create Process</button>
+  </div>
+
+  <!-- Table View -->
+  <div class="table-card" *ngIf="!isLoading && procesos.length > 0">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Process Name</th>
+          <th>Category</th>
+          <th>Created By</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of procesos">
+          <td class="col-name">
+            <div class="name-wrapper">
+              <div class="icon-avatar">
+                <i class="fas fa-cog"></i>
+              </div>
+              <div class="text-info">
+                <strong>{{ p.nombre }}</strong>
+                <span>ID: {{ p.id.substring(0,8) }}...</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="category-tag">{{ p.categoria || 'Uncategorized' }}</span>
+          </td>
+          <td>{{ p.creadoPorEmail }}</td>
+          <td class="date-cell">
+            {{ p.createdAt | date:'MMM d, yyyy' }}
+          </td>
+          <td>
+            <span [class]="'status-badge ' + getEstadoClass(p.estado)">
+              {{ p.estado | uppercase }}
+            </span>
+          </td>
+          <td class="text-right actions-cell">
+            <button class="btn-icon" (click)="editarProceso(p.id)" title="Edit Model">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-icon danger" title="Archive">
+              <i class="fas fa-archive"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

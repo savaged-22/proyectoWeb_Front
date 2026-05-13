@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────
-# Frontend Angular SSR — Deployment
+# Frontend Angular — Deployment
 # ─────────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
@@ -18,16 +18,18 @@ spec:
       labels:
         app: proyectoweb-frontend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: proyectoweb-frontend
           image: __FRONTEND_IMAGE__
           imagePullPolicy: Always
           ports:
-            - containerPort: 4000
+            - containerPort: 80
           readinessProbe:
             httpGet:
               path: /
-              port: 4000
+              port: 80
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
@@ -35,7 +37,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 4000
+              port: 80
             initialDelaySeconds: 20
             periodSeconds: 20
             timeoutSeconds: 3
@@ -47,13 +49,10 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-      imagePullSecrets:
-        - name: ghcr-secret
 
 ---
 # ─────────────────────────────────────────────────────────────────
 # Frontend — Service
-# El Ingress del repo backend apunta a este nombre: proyectoweb-frontend
 # ─────────────────────────────────────────────────────────────────
 apiVersion: v1
 kind: Service
@@ -68,5 +67,30 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 4000
+      targetPort: 80
   type: ClusterIP
+
+---
+# ─────────────────────────────────────────────────────────────────
+# Frontend — Ingress
+# ─────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: proyectoweb-frontend-ingress
+  namespace: grupo12
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: public
+  rules:
+    - host: grupo12.inphotech.co
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proyectoweb-frontend
+                port:
+                  number: 80
