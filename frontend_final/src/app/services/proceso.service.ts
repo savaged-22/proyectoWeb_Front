@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import {
   CrearProcesoRequest,
   Proceso,
+  ProcesoDetalle,
   ProcesoFilters,
   ProcesoPage,
 } from '../core/models/proceso';
@@ -40,5 +41,13 @@ export class ProcesoService {
       creadoPorId: session?.usuarioId ?? '',
     };
     return this.http.post<Proceso>(this.base, payload);
+  }
+
+  obtener(id: string): Observable<ProcesoDetalle> {
+    const session = this.auth.getSession();
+    const params = new HttpParams()
+      .set('empresaId', session?.empresaId ?? '')
+      .set('usuarioId', session?.usuarioId ?? '');
+    return this.http.get<ProcesoDetalle>(`${this.base}/${id}`, { params });
   }
 }

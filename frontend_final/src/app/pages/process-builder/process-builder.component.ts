@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ProcesoService, ProcesoDetalleResponse } from '../../services/proceso.service';
+import { ProcesoService } from '../../services/proceso.service';
+import { ProcesoDetalle } from '../../core/models/proceso';
 import { AuthService } from '../../services/auth.service';
 import { DiagramService } from '../../services/diagram.service';
 
@@ -22,7 +23,7 @@ export class ProcessBuilderComponent implements OnInit {
 
   // Estado del proceso actual
   procesoId: string | null = null;
-  procesoActual: ProcesoDetalleResponse | null = null;
+  procesoActual: ProcesoDetalle | null = null;
   isLoadingProcess = false;
 
   // Selección actual para el panel de propiedades
@@ -63,13 +64,10 @@ export class ProcessBuilderComponent implements OnInit {
   }
 
   cargarDatosProceso(id: string) {
-    const empresaId = this.authService.getEmpresaId();
-    const usuarioId = this.authService.getUsuarioId();
-
-    if (!empresaId || !usuarioId) return;
+    if (!this.authService.isAuthenticated()) return;
 
     this.isLoadingProcess = true;
-    this.procesoService.obtener(id, empresaId, usuarioId).subscribe({
+    this.procesoService.obtener(id).subscribe({
       next: (proceso) => {
         this.procesoActual = proceso;
         this.isLoadingProcess = false;
@@ -138,34 +136,27 @@ export class ProcessBuilderComponent implements OnInit {
       return;
     }
 
-    const empresaId = this.authService.getEmpresaId();
-    const usuarioId = this.authService.getUsuarioId();
-    let poolId = this.authService.getPoolId();
-
-    console.log('IDs recuperados:', { empresaId, usuarioId, poolId });
-
-    if (!poolId) {
-      console.warn('poolId no encontrado, usando fallback para demo.');
-      poolId = '00000000-0000-0000-0000-000000000000';
-    }
-
-    if (!empresaId || !usuarioId) {
-      this.submitError = `Sesión incompleta. Faltan: ${!empresaId ? '[empresaId] ' : ''}${!usuarioId ? '[usuarioId] ' : ''}. Por favor re-inicia sesión.`;
+    const session = this.authService.getSession();
+    if (!session) {
+      this.submitError = 'Sesión inválida. Por favor re-inicia sesión.';
       return;
     }
+
+    // poolId no vive en la sesión nueva; lo leemos del legacy key o usamos fallback demo.
+    const legacyPoolId =
+      typeof localStorage !== 'undefined' ? localStorage.getItem('poolId') : null;
+    const poolId = legacyPoolId || '00000000-0000-0000-0000-000000000000';
 
     this.isSubmitting = true;
     this.submitError = '';
     this.submitSuccess = '';
 
-    const request = {
-      empresaId,
+    const request: Parameters<typeof this.procesoService.crear>[0] = {
       poolId,
-      creadoPorId: usuarioId,
       nombre: this.newProcessForm.value.nombre,
       descripcion: this.newProcessForm.value.descripcion || '',
       categoria: this.newProcessForm.value.categoria || '',
-      estado: 'borrador'
+      estado: 'borrador',
     };
 
     this.procesoService.crear(request).subscribe({
@@ -186,7 +177,7 @@ export class ProcessBuilderComponent implements OnInit {
   applyChanges() {
     if (!this.procesoId || !this.selectedElement) return;
 
-    const usuarioId = this.authService.getUsuarioId();
+    const usuarioId = this.authService.getSession()?.usuarioId;
     if (!usuarioId) return;
 
     this.isSavingProperties = true;

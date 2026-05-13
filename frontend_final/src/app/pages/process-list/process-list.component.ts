@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { ProcesoService, ProcesoResponse } from '../../services/proceso.service';
+import { ProcesoService } from '../../services/proceso.service';
+import { Proceso } from '../../core/models/proceso';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -16,7 +17,7 @@ export class ProcessListComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  procesos: ProcesoResponse[] = [];
+  procesos: Proceso[] = [];
   isLoading = true;
   errorMsg = '';
 
@@ -25,27 +26,16 @@ export class ProcessListComponent implements OnInit {
   }
 
   cargarProcesos() {
-    const empresaId = this.authService.getEmpresaId();
-    const usuarioId = this.authService.getUsuarioId();
-
-    if (!empresaId || !usuarioId) {
+    if (!this.authService.isAuthenticated()) {
       this.errorMsg = 'No se encontró información de la sesión. Por favor re-inicia sesión.';
       this.isLoading = false;
       return;
     }
 
     this.isLoading = true;
-    this.procesoService.listar(empresaId, usuarioId).subscribe({
-      next: (response: any) => {
-        console.log('Backend response:', response);
-        // Manejamos si viene en .content (Page) o si es un array directo
-        if (Array.isArray(response)) {
-          this.procesos = response;
-        } else if (response && response.content) {
-          this.procesos = response.content;
-        } else {
-          this.procesos = [];
-        }
+    this.procesoService.listar().subscribe({
+      next: (page) => {
+        this.procesos = page?.content ?? [];
         this.isLoading = false;
       },
       error: (err) => {

@@ -15,6 +15,8 @@ import { ProcessNewComponent } from './pages/process-new/process-new.component';
 import { ClientDirectoryComponent } from './pages/client-directory/client-directory.component';
 import { ClientDetailComponent } from './pages/client-detail/client-detail.component';
 import { PortfolioDashboardComponent } from './pages/portfolio-dashboard/portfolio-dashboard.component';
+import { ProcessBuilderComponent } from './pages/process-builder/process-builder.component';
+import { ProcessListComponent } from './pages/process-list/process-list.component';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
@@ -32,6 +34,8 @@ export const routes: Routes = [
       { path: 'permissions',      component: PermissionsComponent },
       { path: 'processes',        component: ProcessInventoryComponent },
       { path: 'processes/new',    component: ProcessNewComponent },
+      { path: 'process-list',     component: ProcessListComponent },
+      { path: 'process-builder',  component: ProcessBuilderComponent },
       { path: 'clients',          component: ClientDirectoryComponent },
       { path: 'clients/:id',      component: ClientDetailComponent },
       {

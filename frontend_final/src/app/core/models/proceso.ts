@@ -23,6 +23,37 @@ export interface ProcesoPage {
   size: number;
 }
 
+export interface ProcesoLane {
+  id: string;
+  nombre: string;
+  orden: number;
+  rolProcesoId: string | null;
+}
+
+export interface ProcesoNodo {
+  id: string;
+  label: string;
+  tipo: string;
+  posX: number;
+  posY: number;
+  laneId: string | null;
+  propsJson: string | null;
+}
+
+export interface ProcesoArco {
+  id: string;
+  fromNodoId: string;
+  toNodoId: string;
+  condicionExpr: string | null;
+  propsJson: string | null;
+}
+
+export interface ProcesoDetalle extends Proceso {
+  lanes: ProcesoLane[];
+  nodos: ProcesoNodo[];
+  arcos: ProcesoArco[];
+}
+
 export interface CrearProcesoRequest {
   empresaId: string;
   poolId: string;
