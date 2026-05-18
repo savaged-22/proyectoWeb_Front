@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-import { Proceso } from '../../core/models/proceso';
+import { Proceso } from '../../models/proceso/proceso.model';
 import { ProcesoService } from '../../services/proceso.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -19,6 +19,8 @@ export class ProcessInventoryComponent implements OnInit {
   private auth = inject(AuthService);
 
   procesos: Proceso[] = [];
+  plantillas: Proceso[] = [];
+  procesosNormales: Proceso[] = [];
   loading = true;
   error = '';
 
@@ -52,6 +54,9 @@ export class ProcessInventoryComponent implements OnInit {
       .subscribe({
         next: (page) => {
           this.procesos = page.content ?? [];
+          this.plantillas = this.procesos.filter(p => p.esPlantilla);
+          this.procesosNormales = this.procesos.filter(p => !p.esPlantilla);
+          
           this.total = page.totalElements ?? this.procesos.length;
           this.totalActivos = this.procesos.filter((p) => p.activo).length;
           this.totalCompartidos = 0;
