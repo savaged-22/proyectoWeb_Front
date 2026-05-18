@@ -18,4 +18,8 @@ export const serverRoutes: ServerRoute[] = [
 
   // Resto: prerender estático (landing, login, redirects)
   { path: '**', renderMode: RenderMode.Prerender },
+  {
+    path: '**',
+    renderMode: RenderMode.Server
+  }
 ];

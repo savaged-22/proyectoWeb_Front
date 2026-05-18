@@ -13,6 +13,15 @@ import {
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
+export interface ProcesoDetalleResponse extends ProcesoResponse {
+  lanes: any[]; //hacerlos tipados
+  nodos: any[];
+  arcos: any[];
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class ProcesoService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
