@@ -1,0 +1,10 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lulo-starter-frontend:latest
+    container_name: lulo-starter-frontend-1
+    ports:
+      - "4201:80"
+    restart: always

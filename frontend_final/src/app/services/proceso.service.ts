@@ -30,7 +30,7 @@ export interface ProcesoResponse {
 }
 
 export interface ProcesoDetalleResponse extends ProcesoResponse {
-  lanes: any[];
+  lanes: any[]; //hacerlos tipados
   nodos: any[];
   arcos: any[];
 }
