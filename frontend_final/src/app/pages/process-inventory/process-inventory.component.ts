@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -20,13 +20,20 @@ export class ProcessInventoryComponent implements OnInit {
 
   procesos: Proceso[] = [];
   plantillas: Proceso[] = [];
+  plantillasArchivadas: Proceso[] = [];
   procesosNormales: Proceso[] = [];
+  procesosArchivados: Proceso[] = [];
   loading = true;
   error = '';
 
   filterCategoria = '';
   filterEstado = '';
   searchNombre = '';
+
+  isTemplatesExpanded = true;
+  isProcessesExpanded = true;
+  templatesView: 'table' | 'card' = 'table';
+  processesView: 'table' | 'card' = 'table';
 
   total = 0;
   totalActivos = 0;
@@ -54,8 +61,13 @@ export class ProcessInventoryComponent implements OnInit {
       .subscribe({
         next: (page) => {
           this.procesos = page.content ?? [];
-          this.plantillas = this.procesos.filter(p => p.esPlantilla);
-          this.procesosNormales = this.procesos.filter(p => !p.esPlantilla);
+          this.procesos = page.content ?? [];
+          
+          this.plantillas = this.procesos.filter(p => p.esPlantilla && p.estado?.toUpperCase() !== 'ARCHIVADO');
+          this.plantillasArchivadas = this.procesos.filter(p => p.esPlantilla && p.estado?.toUpperCase() === 'ARCHIVADO');
+          
+          this.procesosNormales = this.procesos.filter(p => !p.esPlantilla && p.estado?.toUpperCase() !== 'ARCHIVADO');
+          this.procesosArchivados = this.procesos.filter(p => !p.esPlantilla && p.estado?.toUpperCase() === 'ARCHIVADO');
           
           this.total = page.totalElements ?? this.procesos.length;
           this.totalActivos = this.procesos.filter((p) => p.activo).length;
@@ -86,5 +98,91 @@ export class ProcessInventoryComponent implements OnInit {
       archivado: 'gray',
     };
     return map[(estado || '').toLowerCase()] ?? 'blue';
+  }
+
+  toggleTemplates() {
+    this.isTemplatesExpanded = !this.isTemplatesExpanded;
+  }
+
+  toggleProcesses() {
+    this.isProcessesExpanded = !this.isProcessesExpanded;
+  }
+
+  // Mapa de transiciones válidas
+  readonly transiciones: Record<string, string[]> = {
+    'BORRADOR':   ['ACTIVO'],
+    'ACTIVO':     ['PUBLICADO', 'INACTIVO'],
+    'PUBLICADO':  ['INACTIVO'],
+    'INACTIVO':   ['ARCHIVADO'],
+    'ARCHIVADO':  []
+  };
+
+  getTransiciones(estado: string): string[] {
+    return this.transiciones[estado?.toUpperCase() || ''] ?? [];
+  }
+
+  tieneTransiciones(estado: string): boolean {
+    return this.getTransiciones(estado).length > 0;
+  }
+
+  // Estado del dropdown por proceso
+  openDropdownId: string | null = null;
+  loadingEstadoId: string | null = null;
+
+  toggleDropdown(event: Event, procesoId: string) {
+    event.stopPropagation();
+    this.openDropdownId = this.openDropdownId === procesoId ? null : procesoId;
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeDropdown(event: Event) {
+    this.openDropdownId = null;
+  }
+
+  cambiarEstado(proceso: any, nuevoEstado: string) {
+    this.loadingEstadoId = proceso.id;
+    this.openDropdownId = null;
+    this.procesoService.cambiarEstado(proceso.id, nuevoEstado).subscribe({
+      next: () => {
+        proceso.estado = nuevoEstado;
+        this.loadingEstadoId = null;
+        this.mostrarToast('Estado actualizado a ' + nuevoEstado, 'success');
+      },
+      error: () => {
+        this.loadingEstadoId = null;
+        this.mostrarToast('Error al actualizar el estado', 'error');
+      }
+    });
+  }
+
+  procesoAArchivar: any = null;
+  showArchiveModal = false;
+
+  abrirModalArchivar(proceso: any) {
+    this.procesoAArchivar = proceso;
+    this.showArchiveModal = true;
+  }
+
+  confirmarArchivado() {
+    if (!this.procesoAArchivar) return;
+    this.cambiarEstado(this.procesoAArchivar, 'ARCHIVADO');
+    this.showArchiveModal = false;
+    this.procesoAArchivar = null;
+  }
+
+  cancelarArchivado() {
+    this.showArchiveModal = false;
+    this.procesoAArchivar = null;
+  }
+
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  showToast = false;
+
+  mostrarToast(mensaje: string, tipo: 'success' | 'error') {
+    this.toastMessage = mensaje;
+    this.toastType = tipo;
+    this.showToast = true;
+    setTimeout(() => this.showToast = false, 3000);
   }
 }

@@ -56,6 +56,10 @@ export class ProcesoService {
     return this.http.get<ProcesoDetalle>(`${this.base}/${id}`, { params });
   }
 
+  cambiarEstado(id: string, nuevoEstado: string): Observable<any> {
+    return this.http.put(`${this.base}/${id}/estado`, { estado: nuevoEstado });
+  }
+
   editar(id: string, body: Omit<EditarProcesoRequest, 'editadoPorId'>): Observable<Proceso> {
     const session = this.auth.getSession();
     const payload: EditarProcesoRequest = {
