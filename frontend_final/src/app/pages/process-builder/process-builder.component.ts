@@ -61,6 +61,26 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     categoria: [''],
   });
 
+  mapActividad(t: string): string {
+    const type = t.toLowerCase();
+    if (type.includes('service')) return 'servicio';
+    if (type.includes('manual')) return 'manual';
+    if (type.includes('script')) return 'script';
+    if (type.includes('subprocess')) return 'subproceso';
+    return 'tarea';
+  }
+
+  mapGateway(t: string): string {
+    const type = t.toLowerCase();
+    if (type.includes('parallel')) return 'paralelo';
+    if (type.includes('inclusive')) return 'inclusivo';
+    return 'exclusivo';
+  }
+
+  getDbId(bpmnId: string): string {
+    return bpmnId.startsWith('id_') ? bpmnId.substring(3) : bpmnId;
+  }
+
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.procesoId = params['id'];
@@ -102,7 +122,7 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
 
         this.propertiesForm.patchValue({
           label: this.selectedElement.label,
-          type: this.selectedElement.tipo,
+          type: element.type.includes('Gateway') ? this.mapGateway(this.selectedElement.tipo) : this.mapActividad(this.selectedElement.tipo),
         });
 
         this.showProperties = true;
@@ -116,21 +136,7 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     const eventBus = this.bpmnModeler.get('eventBus');
     const modeling = this.bpmnModeler.get('modeling');
 
-    const mapActividad = (t: string) => {
-      const type = t.toLowerCase();
-      if (type.includes('service')) return 'servicio';
-      if (type.includes('manual')) return 'manual';
-      if (type.includes('script')) return 'script';
-      if (type.includes('subprocess')) return 'subproceso';
-      return 'tarea';
-    };
-
-    const mapGateway = (t: string) => {
-      const type = t.toLowerCase();
-      if (type.includes('parallel')) return 'paralelo';
-      if (type.includes('inclusive')) return 'inclusivo';
-      return 'exclusivo';
-    };
+    // Funciones de mapeo movidas a nivel de clase
 
     eventBus.on('shape.added', (e: any) => {
       if (this.isImporting || !this.procesoId) return;
@@ -145,22 +151,38 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
         this.diagramService.crearActividad(this.procesoId, {
           creadoPorId: session.usuarioId,
           label: element.businessObject.name || element.type.replace('bpmn:', ''),
-          tipoActividad: mapActividad(element.type),
+          tipoActividad: this.mapActividad(element.type),
           posX: element.x,
           posY: element.y
-        }).subscribe(res => {
-          // Actualizar el ID del elemento en el canvas para que coincida con el de la BD
-          modeling.updateProperties(element, { id: res.id });
+        }).subscribe({
+          next: (res) => {
+            try {
+              console.log('Actividad creada en BD, intentando actualizar ID en canvas a:', 'id_' + res.id);
+              modeling.updateProperties(element, { id: 'id_' + res.id });
+              console.log('ID actualizado exitosamente en el canvas');
+            } catch (err) {
+              console.error('Error al actualizar el ID en el canvas:', err);
+            }
+          },
+          error: (err) => console.error('Error al crear actividad', err)
         });
       } else if (element.type.includes('Gateway')) {
         this.diagramService.crearGateway(this.procesoId, {
           creadoPorId: session.usuarioId,
           label: element.businessObject.name || element.type.replace('bpmn:', ''),
-          tipoGateway: mapGateway(element.type),
+          tipoGateway: this.mapGateway(element.type),
           posX: element.x,
           posY: element.y
-        }).subscribe(res => {
-          modeling.updateProperties(element, { id: res.id });
+        }).subscribe({
+          next: (res) => {
+            try {
+              console.log('Gateway creado en BD, actualizando ID a:', 'id_' + res.id);
+              modeling.updateProperties(element, { id: 'id_' + res.id });
+            } catch (err) {
+              console.error('Error al actualizar ID de gateway:', err);
+            }
+          },
+          error: (err) => console.error('Error al crear gateway', err)
         });
       }
     });
@@ -169,8 +191,8 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
       if (this.isImporting || !this.procesoId) return;
       const element = e.element;
       if (element.type === 'bpmn:SequenceFlow') {
-        const sourceId = element.source.id;
-        const targetId = element.target.id;
+        const sourceId = this.getDbId(element.source.id);
+        const targetId = this.getDbId(element.target.id);
         // Solo guardar si ambos extremos ya tienen un UUID de BD válido (longitud 36)
         if (sourceId.length === 36 && targetId.length === 36) {
           const session = this.authService.getSession();
@@ -179,8 +201,11 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
             creadoPorId: session.usuarioId,
             fromNodoId: sourceId,
             toNodoId: targetId
-          }).subscribe(res => {
-            modeling.updateProperties(element, { id: res.id });
+          }).subscribe({
+            next: (res) => {
+              modeling.updateProperties(element, { id: 'id_' + res.id });
+            },
+            error: (err) => console.error('Error al crear arco', err)
           });
         }
       }
@@ -189,21 +214,22 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     eventBus.on('shape.changed', (e: any) => {
       if (this.isImporting || !this.procesoId) return;
       const element = e.element;
-      if (element.id.length !== 36) return; // Solo actualizar si ya tiene UUID
+      const dbId = this.getDbId(element.id);
+      if (dbId.length !== 36) return; // Solo actualizar si ya tiene UUID
 
       const session = this.authService.getSession();
       if (!session) return;
 
       // Actualizar posiciones o labels cuando se mueven
       if (element.type.includes('Task') || element.type.includes('Event')) {
-        this.diagramService.editarActividad(this.procesoId, element.id, {
+        this.diagramService.editarActividad(this.procesoId, dbId, {
           editadoPorId: session.usuarioId,
           label: element.businessObject.name || element.type.replace('bpmn:', ''),
           posX: element.x,
           posY: element.y
         }).subscribe();
       } else if (element.type.includes('Gateway')) {
-        this.diagramService.editarGateway(this.procesoId, element.id, {
+        this.diagramService.editarGateway(this.procesoId, dbId, {
           editadoPorId: session.usuarioId,
           label: element.businessObject.name || element.type.replace('bpmn:', ''),
           posX: element.x,
@@ -215,34 +241,38 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     eventBus.on('shape.removed', (e: any) => {
       if (this.isImporting || !this.procesoId) return;
       const element = e.element;
-      if (element.id.length !== 36) return;
+      const dbId = this.getDbId(element.id);
+      if (dbId.length !== 36) return;
 
       const session = this.authService.getSession();
       if (!session) return;
 
       if (element.type.includes('Task') || element.type.includes('Event')) {
-        this.diagramService.eliminarActividad(this.procesoId, element.id, { eliminadoPorId: session.usuarioId }).subscribe();
+        this.diagramService.eliminarActividad(this.procesoId, dbId, { eliminadoPorId: session.usuarioId }).subscribe();
       } else if (element.type.includes('Gateway')) {
-        this.diagramService.eliminarGateway(this.procesoId, element.id, { eliminadoPorId: session.usuarioId }).subscribe();
+        this.diagramService.eliminarGateway(this.procesoId, dbId, { eliminadoPorId: session.usuarioId }).subscribe();
       }
     });
 
     eventBus.on('connection.removed', (e: any) => {
       if (this.isImporting || !this.procesoId) return;
       const element = e.element;
-      if (element.id.length !== 36) return;
+      const dbId = this.getDbId(element.id);
+      if (dbId.length !== 36) return;
 
       const session = this.authService.getSession();
       if (!session) return;
 
       if (element.type === 'bpmn:SequenceFlow') {
-        this.diagramService.eliminarArco(this.procesoId, element.id, { eliminadoPorId: session.usuarioId }).subscribe();
+        this.diagramService.eliminarArco(this.procesoId, dbId, { eliminadoPorId: session.usuarioId }).subscribe();
       }
     });
   }
 
   cargarDatosProceso(id: string) {
     if (!this.authService.isAuthenticated()) return;
+
+    localStorage.setItem('lastProcesoId', id);
 
     this.isLoadingProcess = true;
     this.procesoService.obtener(id).subscribe({
@@ -390,39 +420,59 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     this.isSavingProperties = true;
     const val = this.propertiesForm.value;
 
+    const dbId = this.getDbId(this.selectedElement.id);
+    const isNew = dbId.length !== 36;
+
     if (this.selectedNodeType === 'lane') {
-      this.diagramService.editarLane(this.procesoId, this.selectedElement.id, {
-        editadoPorId: usuarioId,
-        nombre: val.label,
-      }).subscribe({
-        next: () => this.onSaveSuccess(),
+      const ob$ = isNew 
+        ? this.diagramService.crearLane(this.procesoId, { creadoPorId: usuarioId, nombre: val.label })
+        : this.diagramService.editarLane(this.procesoId, dbId, { editadoPorId: usuarioId, nombre: val.label });
+      
+      ob$.subscribe({
+        next: (res: any) => this.onSaveSuccess(isNew ? res.id : dbId),
         error: (err) => this.onSaveError(err)
       });
     } else if (this.selectedNodeType === 'gateway') {
-      this.diagramService.editarGateway(this.procesoId, this.selectedElement.id, {
-        editadoPorId: usuarioId,
-        label: val.label,
-        tipoGateway: val.type
-      }).subscribe({
-        next: () => this.onSaveSuccess(),
+      const config = val.propsJson?.trim() ? val.propsJson : undefined;
+      const ob$ = isNew
+        ? this.diagramService.crearGateway(this.procesoId, { creadoPorId: usuarioId, label: val.label, tipoGateway: val.type, posX: this.selectedElement.x || 150, posY: this.selectedElement.y || 100, configJson: config })
+        : this.diagramService.editarGateway(this.procesoId, dbId, { editadoPorId: usuarioId, label: val.label, tipoGateway: val.type, configJson: config });
+        
+      ob$.subscribe({
+        next: (res: any) => this.onSaveSuccess(isNew ? res.id : dbId),
         error: (err) => this.onSaveError(err)
       });
     } else {
       // Actividad (User Task, Service Task, etc)
-      this.diagramService.editarActividad(this.procesoId, this.selectedElement.id, {
-        editadoPorId: usuarioId,
-        label: val.label,
-        tipoActividad: val.type,
-        propsJson: val.propsJson
-      }).subscribe({
-        next: () => this.onSaveSuccess(),
+      const props = val.propsJson?.trim() ? val.propsJson : undefined;
+      const ob$ = isNew
+        ? this.diagramService.crearActividad(this.procesoId, { creadoPorId: usuarioId, label: val.label, tipoActividad: val.type, posX: this.selectedElement.x || 150, posY: this.selectedElement.y || 100, propsJson: props })
+        : this.diagramService.editarActividad(this.procesoId, dbId, { editadoPorId: usuarioId, label: val.label, tipoActividad: val.type, propsJson: props });
+        
+      ob$.subscribe({
+        next: (res: any) => this.onSaveSuccess(isNew ? res.id : dbId),
         error: (err) => this.onSaveError(err)
       });
     }
   }
 
-  private onSaveSuccess() {
+  private onSaveSuccess(newDbId?: string) {
     this.isSavingProperties = false;
+    
+    // Si era nuevo y se guardó, actualizamos su ID en el canvas
+    if (newDbId && this.selectedElement && newDbId !== this.getDbId(this.selectedElement.id)) {
+      try {
+        const modeling = this.bpmnModeler.get('modeling');
+        const elementRegistry = this.bpmnModeler.get('elementRegistry');
+        const element = elementRegistry.get(this.selectedElement.id);
+        if (element) {
+           modeling.updateProperties(element, { id: 'id_' + newDbId });
+        }
+      } catch (e) {
+        console.error('No se pudo actualizar el ID en el canvas tras guardarlo:', e);
+      }
+    }
+
     // Recargar datos para ver reflejado el cambio
     if (this.procesoId) this.cargarDatosProceso(this.procesoId);
     alert('Cambios guardados correctamente');

@@ -54,21 +54,21 @@ export class BpmnMapperService {
       const incoming = proceso.arcos.filter(a => a.toNodoId === nodo.id);
       const outgoing = proceso.arcos.filter(a => a.fromNodoId === nodo.id);
 
-      bpmnElements += `\n    <${tag} id="${nodo.id}" name="${this.escapeXml(nodo.label)}">`;
-      incoming.forEach(a => { bpmnElements += `\n      <bpmn:incoming>${a.id}</bpmn:incoming>`; });
-      outgoing.forEach(a => { bpmnElements += `\n      <bpmn:outgoing>${a.id}</bpmn:outgoing>`; });
+      bpmnElements += `\n    <${tag} id="id_${nodo.id}" name="${this.escapeXml(nodo.label)}">`;
+      incoming.forEach(a => { bpmnElements += `\n      <bpmn:incoming>id_${a.id}</bpmn:incoming>`; });
+      outgoing.forEach(a => { bpmnElements += `\n      <bpmn:outgoing>id_${a.id}</bpmn:outgoing>`; });
       bpmnElements += `\n    </${tag}>`;
 
       // Dibujar DI del nodo
       diElements += `
-      <bpmndi:BPMNShape id="${nodo.id}_di" bpmnElement="${nodo.id}">
+      <bpmndi:BPMNShape id="id_${nodo.id}_di" bpmnElement="id_${nodo.id}">
         <dc:Bounds x="${nodo.posX || 150}" y="${nodo.posY || 100}" width="${width}" height="${height}" />
       </bpmndi:BPMNShape>`;
     }
 
     // 2. Procesar Arcos (Secuencias)
     for (const arco of proceso.arcos) {
-      bpmnElements += `\n    <bpmn:sequenceFlow id="${arco.id}" sourceRef="${arco.fromNodoId}" targetRef="${arco.toNodoId}" />`;
+      bpmnElements += `\n    <bpmn:sequenceFlow id="id_${arco.id}" sourceRef="id_${arco.fromNodoId}" targetRef="id_${arco.toNodoId}" />`;
 
       // Para el DI de la flecha necesitamos las coordenadas (X,Y) origen y destino
       const fromNode = proceso.nodos.find(n => n.id === arco.fromNodoId);
@@ -81,7 +81,7 @@ export class BpmnMapperService {
       const toY = (toNode?.posY || 100) + (TASK_HEIGHT / 2);
 
       diElements += `
-      <bpmndi:BPMNEdge id="${arco.id}_di" bpmnElement="${arco.id}">
+      <bpmndi:BPMNEdge id="id_${arco.id}_di" bpmnElement="id_${arco.id}">
         <di:waypoint x="${fromX}" y="${fromY}" />
         <di:waypoint x="${toX}" y="${toY}" />
       </bpmndi:BPMNEdge>`;
