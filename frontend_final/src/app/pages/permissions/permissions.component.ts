@@ -6,6 +6,7 @@ import { Pool } from '../../core/models/pool';
 import { Permiso, RolPool } from '../../core/models/rol-pool';
 import { PoolService } from '../../services/pool.service';
 import { RolPoolService } from '../../services/rol-pool.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-permissions',
@@ -17,6 +18,7 @@ import { RolPoolService } from '../../services/rol-pool.service';
 export class PermissionsComponent implements OnInit {
   private poolService = inject(PoolService);
   private rolPoolService = inject(RolPoolService);
+  private auth = inject(AuthService);
 
   pools: Pool[] = [];
   selectedPool?: Pool;
@@ -27,6 +29,13 @@ export class PermissionsComponent implements OnInit {
 
   loading = true;
   error = '';
+
+  showModal = false;
+  modalNombre = '';
+  modalDescripcion = '';
+  modalPermisos: Set<string> = new Set();
+  modalLoading = false;
+  modalError = '';
 
   ngOnInit(): void {
     this.poolService.listar().subscribe({
@@ -84,5 +93,53 @@ export class PermissionsComponent implements OnInit {
 
   get rolesCustom(): number {
     return this.roles.filter((r) => !r.esPropietario).length;
+  }
+
+  abrirModal(): void {
+    this.showModal = true;
+    this.modalNombre = '';
+    this.modalDescripcion = '';
+    this.modalPermisos = new Set();
+    this.modalError = '';
+  }
+
+  cerrarModal(): void {
+    this.showModal = false;
+  }
+
+  togglePermiso(codigo: string): void {
+    this.modalPermisos.has(codigo)
+      ? this.modalPermisos.delete(codigo)
+      : this.modalPermisos.add(codigo);
+  }
+
+  crearRol(): void {
+    if (!this.modalNombre.trim() || !this.selectedPool) return;
+    const session = this.auth.getSession();
+    this.modalLoading = true;
+    this.modalError = '';
+
+    this.rolPoolService.crear({
+      poolId: this.selectedPool.id,
+      creadoPorId: session!.usuarioId,
+      nombre: this.modalNombre.trim(),
+      descripcion: this.modalDescripcion.trim() || undefined,
+      codigosPermiso: Array.from(this.modalPermisos),
+    }).subscribe({
+      next: (nuevoRol) => {
+        this.modalLoading = false;
+        this.cerrarModal();
+        this.rolPoolService.listar(this.selectedPool!.id).subscribe({
+          next: (rs) => {
+            this.roles = rs;
+            this.selectRole(nuevoRol);
+          },
+        });
+      },
+      error: (err) => {
+        this.modalLoading = false;
+        this.modalError = err.error?.message ?? 'Error al crear el rol.';
+      },
+    });
   }
 }

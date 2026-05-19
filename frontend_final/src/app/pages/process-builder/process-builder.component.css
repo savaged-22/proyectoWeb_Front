@@ -1,9 +1,13 @@
+@import 'bpmn-js/dist/assets/diagram-js.css';
+@import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
+
 /* Base Layout */
 .builder-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
+  min-height: calc(100vh - 60px); /* Fill the remaining layout space */
   font-family: 'Inter', -apple-system, sans-serif;
   background-color: #f8fafc;
   overflow: hidden;
