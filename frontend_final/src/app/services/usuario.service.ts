@@ -20,6 +20,18 @@ export interface CrearUsuarioResponse {
   mensaje: string;
 }
 
+export interface ActualizarUsuarioRequest {
+  rolPoolId?: string;
+  estado?: string;
+}
+
+export interface ActualizarUsuarioResponse {
+  usuarioId: string;
+  email: string;
+  estado: string;
+  rolAsignado: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
@@ -27,5 +39,13 @@ export class UsuarioService {
 
   crear(payload: CrearUsuarioRequest): Observable<CrearUsuarioResponse> {
     return this.http.post<CrearUsuarioResponse>(this.base, payload);
+  }
+
+  /** Edita un usuario: reemplaza su rol y/o cambia su estado. */
+  actualizar(
+    usuarioId: string,
+    payload: ActualizarUsuarioRequest,
+  ): Observable<ActualizarUsuarioResponse> {
+    return this.http.patch<ActualizarUsuarioResponse>(`${this.base}/${usuarioId}`, payload);
   }
 }

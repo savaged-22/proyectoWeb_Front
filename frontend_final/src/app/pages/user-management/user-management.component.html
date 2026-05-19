@@ -37,6 +37,7 @@
           <tr>
             <th>User Identifier</th>
             <th>System Email</th>
+            <th>Role</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -49,16 +50,28 @@
             </td>
             <td>{{ u.email }}</td>
             <td>
+              <span class="badge" [class]="u.rolPrincipal === 'Sin rol' ? 'badge gray' : 'badge blue'">
+                {{ u.rolPrincipal }}
+              </span>
+            </td>
+            <td>
               <span class="badge" [class]="'badge ' + badgeForEstado(u.estado)">
                 ● {{ (u.estado || '—') | uppercase }}
               </span>
             </td>
             <td>
-              <button class="btn btn-outline btn-sm">Edit</button>
+              <button
+                *ngIf="puedeGestionarRoles"
+                class="btn btn-outline btn-sm"
+                (click)="abrirEditar(u)"
+              >
+                Edit
+              </button>
+              <span *ngIf="!puedeGestionarRoles" class="hint">—</span>
             </td>
           </tr>
           <tr *ngIf="filteredUsers.length === 0">
-            <td colspan="4" class="state">No hay usuarios que coincidan con la búsqueda.</td>
+            <td colspan="5" class="state">No hay usuarios que coincidan con la búsqueda.</td>
           </tr>
         </tbody>
       </table>
@@ -80,7 +93,21 @@
         </div>
         <div class="form-group">
           <label>Password</label>
-          <input type="password" [(ngModel)]="newUserPassword" placeholder="Min. 8 characters" />
+          <div class="password-field">
+            <input
+              [type]="showNewUserPassword ? 'text' : 'password'"
+              [(ngModel)]="newUserPassword"
+              placeholder="Min. 8 characters"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="showNewUserPassword = !showNewUserPassword"
+              [attr.aria-label]="showNewUserPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <app-icon [name]="showNewUserPassword ? 'eye-off' : 'eye'"></app-icon>
+            </button>
+          </div>
         </div>
         <div class="form-group">
           <label>Role</label>
@@ -178,3 +205,61 @@
     </table>
   </div>
 </ng-container>
+
+<!-- Modal: editar usuario (asignar rol) -->
+<div class="modal-overlay" *ngIf="editUser as eu" (click)="cerrarEditar()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar usuario</h3>
+      <button class="modal-close" (click)="cerrarEditar()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="edit-user-id">
+        <span class="avatar">{{ getInitials(eu.email) }}</span>
+        <div>
+          <strong>{{ eu.email }}</strong>
+          <span class="hint">Rol actual: {{ eu.rolPrincipal }}</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Rol</label>
+        <select [(ngModel)]="editRolPoolId">
+          <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
+          <option *ngIf="roles.length === 0" value="" disabled>No hay roles disponibles</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Estado</label>
+        <select [(ngModel)]="editEstado">
+          <option *ngFor="let e of estadosDisponibles" [value]="e">
+            {{ e | titlecase }}
+          </option>
+        </select>
+      </div>
+
+      <p
+        *ngIf="editStatus"
+        class="hint"
+        [style.color]="editError ? 'var(--color-danger)' : 'var(--color-success)'"
+      >
+        {{ editStatus }}
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="cerrarEditar()" [disabled]="editSaving">
+        Cerrar
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="guardarUsuario()"
+        [disabled]="editSaving"
+      >
+        {{ editSaving ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+</div>

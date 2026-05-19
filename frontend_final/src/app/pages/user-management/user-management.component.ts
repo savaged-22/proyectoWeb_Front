@@ -9,11 +9,12 @@ import { AuthService } from '../../services/auth.service';
 import { PoolService } from '../../services/pool.service';
 import { RolPoolService } from '../../services/rol-pool.service';
 import { UsuarioService } from '../../services/usuario.service';
+import { IconComponent } from '../../shared/icon.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css'],
 })
@@ -33,9 +34,62 @@ export class UserManagementComponent implements OnInit {
   newUserEmail = '';
   newUserPassword = '';
   newUserRolPoolId = '';
+  showNewUserPassword = false;
   userStatus = '';
   userStatusError = false;
   creating = false;
+
+  // ── Modal de edición: rol + estado de un usuario ────────────────────────
+  editUser?: UsuarioBasico;
+  editRolPoolId = '';
+  editEstado = '';
+  editStatus = '';
+  editError = false;
+  editSaving = false;
+
+  readonly estadosDisponibles = ['activo', 'suspendido', 'inactivo', 'pendiente'];
+
+  get puedeGestionarRoles(): boolean {
+    return this.auth.can('POOL_ADMINISTRAR');
+  }
+
+  abrirEditar(u: UsuarioBasico): void {
+    this.editUser = u;
+    this.editRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';
+    this.editEstado = (u.estado || 'activo').toLowerCase();
+    this.editStatus = '';
+    this.editError = false;
+  }
+
+  cerrarEditar(): void {
+    this.editUser = undefined;
+  }
+
+  guardarUsuario(): void {
+    const session = this.auth.getSession();
+    if (!this.editUser || !session) return;
+    this.editSaving = true;
+    this.editStatus = '';
+    this.editError = false;
+    this.usuarioService
+      .actualizar(this.editUser.id, {
+        rolPoolId: this.editRolPoolId || undefined,
+        estado: this.editEstado || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.editSaving = false;
+          this.editStatus = 'Cambios guardados correctamente.';
+          this.editError = false;
+          this.loadUsuarios(session.empresaId);
+        },
+        error: (err) => {
+          this.editSaving = false;
+          this.editStatus = err?.error?.message ?? 'No se pudieron guardar los cambios.';
+          this.editError = true;
+        },
+      });
+  }
 
   ngOnInit(): void {
     const session = this.auth.getSession();
@@ -107,6 +161,21 @@ export class UserManagementComponent implements OnInit {
         this.newUserPassword = '';
         this.newUserRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';
         this.creating = false;
+        // Actualización optimista: el usuario aparece al instante en la tabla.
+        if (this.empresa) {
+          this.empresa.usuarios = [
+            {
+              id: res.usuarioId,
+              email: res.email,
+              estado: 'activo',
+              rolPrincipal: res.rolAsignado,
+              createdAt: new Date().toISOString(),
+            },
+            ...this.empresa.usuarios,
+          ];
+          this.empresa.totalUsuarios = (this.empresa.totalUsuarios ?? 0) + 1;
+        }
+        // …y luego sincroniza con el servidor.
         this.loadUsuarios(session.empresaId);
       },
       error: (err) => {

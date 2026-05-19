@@ -5,11 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 
 import { EmpresaListItem, RegistroEmpresaRequest } from '../../core/models/empresa';
 import { EmpresaService } from '../../services/empresa.service';
+import { IconComponent } from '../../shared/icon.component';
 
 @Component({
   selector: 'app-client-directory',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, IconComponent],
   templateUrl: './client-directory.component.html',
   styleUrls: ['./client-directory.component.css'],
 })
@@ -32,6 +33,7 @@ export class ClientDirectoryComponent implements OnInit {
   saving = false;
   saveError = '';
   saveSuccess = '';
+  showPassword = false;
 
   ngOnInit(): void {
     this.refresh();

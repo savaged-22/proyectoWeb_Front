@@ -46,4 +46,13 @@ export class RolPoolService {
       codigosPermiso,
     });
   }
+
+  /** Asigna un usuario existente a un rol del pool. */
+  asignarUsuario(rolPoolId: string, usuarioId: string): Observable<RolPool> {
+    const session = this.auth.getSession();
+    return this.http.post<RolPool>(`${this.base}/${rolPoolId}/usuarios`, {
+      usuarioId,
+      asignadoPorId: session?.usuarioId,
+    });
+  }
 }
