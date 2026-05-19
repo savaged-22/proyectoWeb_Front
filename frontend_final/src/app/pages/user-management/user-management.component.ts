@@ -6,8 +6,9 @@ import { EmpresaDetail, UsuarioBasico } from '../../core/models/empresa';
 import { RolPool } from '../../core/models/rol-pool';
 import { EmpresaService } from '../../services/empresa.service';
 import { AuthService } from '../../services/auth.service';
+import { PoolService } from '../../services/pool.service';
 import { RolPoolService } from '../../services/rol-pool.service';
-import { InvitacionService } from '../../services/invitacion.service';
+import { UsuarioService } from '../../services/usuario.service';
 
 @Component({
   selector: 'app-user-management',
@@ -19,8 +20,9 @@ import { InvitacionService } from '../../services/invitacion.service';
 export class UserManagementComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private auth = inject(AuthService);
+  private poolService = inject(PoolService);
   private rolPoolService = inject(RolPoolService);
-  private invitacionService = inject(InvitacionService);
+  private usuarioService = inject(UsuarioService);
 
   empresa?: EmpresaDetail;
   roles: RolPool[] = [];
@@ -28,10 +30,12 @@ export class UserManagementComponent implements OnInit {
   error = '';
   searchQuery = '';
 
-  inviteEmail = '';
-  inviteRolPoolId = '';
-  inviteStatus = '';
-  inviting = false;
+  newUserEmail = '';
+  newUserPassword = '';
+  newUserRolPoolId = '';
+  userStatus = '';
+  userStatusError = false;
+  creating = false;
 
   ngOnInit(): void {
     const session = this.auth.getSession();
@@ -40,7 +44,32 @@ export class UserManagementComponent implements OnInit {
       this.loading = false;
       return;
     }
-    this.empresaService.detalle(session.empresaId).subscribe({
+    this.loadUsuarios(session.empresaId);
+    this.cargarRoles();
+  }
+
+  private cargarRoles(): void {
+    this.poolService.listar().subscribe({
+      next: (pools) => {
+        if (pools.length === 0) return;
+        this.rolPoolService.listar(pools[0].id).subscribe({
+          next: (roles) => {
+            this.roles = roles;
+            if (roles.length > 0) this.newUserRolPoolId = roles[0].id;
+          },
+          error: () => {
+            this.error = 'No se pudieron cargar los roles disponibles.';
+          },
+        });
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar los pools de la empresa.';
+      },
+    });
+  }
+
+  private loadUsuarios(empresaId: string): void {
+    this.empresaService.detalle(empresaId).subscribe({
       next: (e) => {
         this.empresa = e;
         this.loading = false;
@@ -51,36 +80,39 @@ export class UserManagementComponent implements OnInit {
         this.loading = false;
       },
     });
-    if (session.poolId) {
-      this.rolPoolService.listar(session.poolId).subscribe({
-        next: (roles) => {
-          this.roles = roles;
-          if (roles.length > 0) this.inviteRolPoolId = roles[0].id;
-        },
-        error: () => {},
-      });
-    }
   }
 
-  sendInvitation(): void {
+  createUser(): void {
     const session = this.auth.getSession();
-    if (!session || !this.inviteEmail || !this.inviteRolPoolId) return;
-    this.inviting = true;
-    this.inviteStatus = '';
-    this.invitacionService.invitar({
+    if (!session || !this.newUserEmail || !this.newUserPassword || !this.newUserRolPoolId) return;
+    if (this.newUserPassword.length < 8) {
+      this.userStatus = 'La contraseña debe tener al menos 8 caracteres.';
+      this.userStatusError = true;
+      return;
+    }
+    this.creating = true;
+    this.userStatus = '';
+    this.userStatusError = false;
+    this.usuarioService.crear({
       empresaId: session.empresaId,
-      rolPoolId: this.inviteRolPoolId,
-      invitadoPorId: session.usuarioId,
-      emailInvitado: this.inviteEmail,
+      creadoPorId: session.usuarioId,
+      rolPoolId: this.newUserRolPoolId,
+      email: this.newUserEmail,
+      password: this.newUserPassword,
     }).subscribe({
       next: (res) => {
-        this.inviteStatus = `Invitación enviada a ${res.emailInvitado}`;
-        this.inviteEmail = '';
-        this.inviting = false;
+        this.userStatus = `Usuario ${res.email} creado exitosamente con rol "${res.rolAsignado}".`;
+        this.userStatusError = false;
+        this.newUserEmail = '';
+        this.newUserPassword = '';
+        this.newUserRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';
+        this.creating = false;
+        this.loadUsuarios(session.empresaId);
       },
       error: (err) => {
-        this.inviteStatus = err?.error?.message ?? 'Error al enviar invitación.';
-        this.inviting = false;
+        this.userStatus = err?.error?.message ?? 'Error al crear el usuario.';
+        this.userStatusError = true;
+        this.creating = false;
       },
     });
   }

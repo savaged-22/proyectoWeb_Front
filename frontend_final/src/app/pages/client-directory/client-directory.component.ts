@@ -98,6 +98,21 @@ export class ClientDirectoryComponent implements OnInit {
 
   status(e: EmpresaListItem): { label: string; color: string } {
     if (e.totalUsuarios === 0) return { label: 'PENDING', color: 'amber' };
-    return { label: 'VERIFIED', color: 'green' };
+    return { label: 'ACTIVE', color: 'green' };
+  }
+
+  tier(e: EmpresaListItem): { label: string; color: string } {
+    if (e.totalProcesos > 50) return { label: 'PLATINUM', color: 'blue' };
+    if (e.totalProcesos > 10) return { label: 'ENTERPRISE', color: 'green' };
+    if (e.totalUsuarios === 0)  return { label: 'PENDING', color: 'amber' };
+    return { label: 'GROWTH', color: 'gray' };
+  }
+
+  get totalUsuariosSum(): number {
+    return this.empresas.reduce((a, e) => a + e.totalUsuarios, 0);
+  }
+
+  get totalProcesosSum(): number {
+    return this.empresas.reduce((a, e) => a + e.totalProcesos, 0);
   }
 }

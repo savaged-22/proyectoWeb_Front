@@ -1,7 +1,7 @@
 <nav class="breadcrumb">
   <a routerLink="/app/dashboard">Directory</a>
   <span>/</span>
-  <span class="current">Companies</span>
+  <span class="current">Client Directory</span>
 </nav>
 
 <header class="page-header">
@@ -11,22 +11,19 @@
       Manage organizational units and billing entities within the BPM ecosystem.
     </p>
   </div>
-  <div class="actions">
-    <button class="btn btn-primary" (click)="form.nombreEmpresa = form.nombreEmpresa">+ Add New Empresa</button>
-  </div>
 </header>
 
-<div class="grid">
+<div class="main-grid">
   <!-- Registration form -->
-  <div class="panel">
+  <div class="panel form-panel">
     <div class="panel-header">
-      <div class="panel-title">Registration</div>
+      <div class="panel-title">Register Client</div>
     </div>
     <p class="hint mb-2">Add a new legal entity to the system.</p>
 
     <form (ngSubmit)="submit()">
       <div class="form-group">
-        <label>Company Name (Empresa)</label>
+        <label>Company Name</label>
         <input type="text" [(ngModel)]="form.nombreEmpresa" name="nombreEmpresa"
                placeholder="e.g. Globex Corporation" required />
       </div>
@@ -48,85 +45,106 @@
       <div class="form-group">
         <label>Admin Password</label>
         <input type="password" [(ngModel)]="form.password" name="password"
-               placeholder="Min 8 caracteres" required />
+               placeholder="Min 8 characters" required />
       </div>
 
       <button type="submit" class="btn btn-dark w-full" [disabled]="saving">
-        {{ saving ? 'Registrando…' : 'Commit Registration' }}
+        {{ saving ? 'Registering…' : 'Register Client' }}
       </button>
 
-      <p *ngIf="saveError" class="state error" style="padding: 0.5rem 0">{{ saveError }}</p>
-      <p *ngIf="saveSuccess" class="state" style="padding: 0.5rem 0; color: var(--color-success)">
-        {{ saveSuccess }}
-      </p>
+      <p *ngIf="saveError" class="hint mt-1" style="color: var(--color-error, red)">{{ saveError }}</p>
+      <p *ngIf="saveSuccess" class="hint mt-1" style="color: var(--color-success, green)">{{ saveSuccess }}</p>
 
       <p class="hint mt-2">
-        Entity will be created in <strong>active</strong> status with default pool & admin role.
+        Entity will be created in <strong>active</strong> status with default pool &amp; admin role.
       </p>
     </form>
   </div>
 
-  <!-- Active directory -->
-  <div class="panel directory-panel">
-    <div class="panel-header">
-      <div class="panel-title">Active Directory</div>
-      <button class="btn btn-outline btn-sm" (click)="refresh()">Refresh</button>
+  <!-- Directory panel -->
+  <div class="directory-col">
+
+    <!-- KPI strip -->
+    <div class="kpi-row" *ngIf="!loading && !loadError">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Entities</div>
+        <div class="kpi-value">{{ empresas.length }}</div>
+        <div class="kpi-trend">↑ Live</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Users</div>
+        <div class="kpi-value">{{ totalUsuariosSum }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Running Processes</div>
+        <div class="kpi-value">{{ totalProcesosSum }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Portfolio Health</div>
+        <div class="kpi-value">99.8%</div>
+        <div class="kpi-trend">○ Stable</div>
+      </div>
     </div>
 
+    <!-- Loading / Error -->
     <ng-container *ngIf="loading">
       <div class="state">Loading clients…</div>
     </ng-container>
-
     <ng-container *ngIf="!loading && loadError">
       <div class="state error">{{ loadError }}</div>
     </ng-container>
 
-    <table class="data-table" *ngIf="!loading && !loadError && empresas.length > 0">
-      <thead>
-        <tr>
-          <th>Client Info</th>
-          <th>Tax ID (NIT)</th>
-          <th>Status</th>
-          <th>Contact</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let e of empresas" (click)="open(e.id)" style="cursor:pointer">
-          <td>
+    <!-- Cards grid -->
+    <div class="cards-grid" *ngIf="!loading && !loadError && empresas.length > 0">
+      <div
+        *ngFor="let e of empresas"
+        class="client-card"
+        (click)="open(e.id)"
+        role="button"
+        tabindex="0"
+      >
+        <div class="card-top">
+          <div class="card-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+          <div class="card-id">
             <strong>{{ e.nombre }}</strong>
-            <div style="font-size:0.7rem; color: var(--color-text-muted);">
-              ID: {{ e.id.substring(0, 10) }}
-            </div>
-          </td>
-          <td>{{ e.nit }}</td>
-          <td>
-            <span class="badge" [class]="'badge ' + status(e).color">
-              {{ status(e).label }}
-            </span>
-          </td>
-          <td>{{ e.emailContacto || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
+            <span>NIT: {{ e.nit }}</span>
+          </div>
+          <span class="badge" [class]="'badge ' + tier(e).color">{{ tier(e).label }}</span>
+        </div>
 
-    <div *ngIf="!loading && empresas.length === 0 && !loadError" class="state">
-      Aún no hay empresas registradas.
+        <div class="card-stats">
+          <div>
+            <span class="stat-label">USERS</span>
+            <span class="stat-value">{{ e.totalUsuarios }}</span>
+          </div>
+          <div>
+            <span class="stat-label">POOLS</span>
+            <span class="stat-value">{{ e.totalPools }}</span>
+          </div>
+          <div>
+            <span class="stat-label">STATUS</span>
+            <span class="stat-value">
+              <span class="badge" [class]="'badge ' + status(e).color">
+                ● {{ status(e).label }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div class="card-foot">
+          <span>Created: {{ e.createdAt | date:'mediumDate' }}</span>
+          <a (click)="$event.stopPropagation(); open(e.id)" class="manage-link">MANAGE CONTEXT →</a>
+        </div>
+      </div>
     </div>
 
-    <p class="hint mt-2" *ngIf="empresas.length > 0">
-      Showing {{ empresas.length }} client{{ empresas.length === 1 ? '' : 's' }}
-    </p>
-  </div>
-</div>
+    <div *ngIf="!loading && !loadError && empresas.length === 0" class="state">
+      No hay empresas registradas todavía.
+    </div>
 
-<div class="bottom-strip">
-  <div class="strip-card">
-    <strong style="color:#fff">📊 TOTAL REGISTRY</strong>
-    <span class="strip-value">{{ empresas.length }}</span>
-    <span style="color:#cbd5e1; font-size:0.7rem">Clients in directory</span>
-  </div>
-  <div class="strip-card light">
-    <strong>Verification Flow Active</strong>
-    <span>Newly added clients will automatically enter the Compliance Review process designer.</span>
+    <div class="dir-footer" *ngIf="!loading && empresas.length > 0">
+      <button class="btn btn-outline btn-sm" (click)="refresh()">Refresh</button>
+      <span class="hint">Showing {{ empresas.length }} client{{ empresas.length === 1 ? '' : 's' }}</span>
+    </div>
   </div>
 </div>
