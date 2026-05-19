@@ -69,31 +69,30 @@
     <!-- Right: Invite + Pending -->
     <div>
       <div class="panel invite-card">
-        <strong>Invite Collaborators</strong>
+        <strong>Create User</strong>
         <p class="subtitle" style="font-size:0.8rem; margin: 0.25rem 0 1rem 0;">
-          Send an onboarding link to new team members to grant them access.
+          Add a new team member directly with email, password and role.
         </p>
 
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" [(ngModel)]="inviteEmail" placeholder="colleague@company.com" />
+          <input type="email" [(ngModel)]="newUserEmail" placeholder="colleague@company.com" />
         </div>
         <div class="form-group">
-          <label>Default Role</label>
-          <select [(ngModel)]="inviteRolPoolId">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="newUserPassword" placeholder="Min. 8 characters" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select [(ngModel)]="newUserRolPoolId">
             <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
             <option *ngIf="roles.length === 0" value="" disabled>No hay roles disponibles</option>
           </select>
         </div>
-        <button class="btn btn-primary w-full" (click)="sendInvitation()" [disabled]="inviting || !inviteEmail || !inviteRolPoolId">
-          {{ inviting ? 'Enviando…' : 'Send Invitation' }}
+        <button class="btn btn-primary w-full" (click)="createUser()" [disabled]="creating || !newUserEmail || !newUserPassword || !newUserRolPoolId">
+          {{ creating ? 'Creating…' : 'Create User' }}
         </button>
-        <p *ngIf="inviteStatus" class="hint mt-1" style="color: var(--color-success, green)">{{ inviteStatus }}</p>
-      </div>
-
-      <div class="panel mt-2">
-        <strong>Pending Invites</strong>
-        <p class="state" style="padding: 0.75rem 0">No pending invitations.</p>
+        <p *ngIf="userStatus" class="hint mt-1" [style.color]="userStatusError ? 'var(--color-error, red)' : 'var(--color-success, green)'">{{ userStatus }}</p>
       </div>
     </div>
   </div>
