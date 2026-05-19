@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { LandingPage } from './pages/landing/landing';
 import { LoginPage } from './pages/login/login';
 import { authGuard } from './guards/auth.guard';
+import { permisoGuard } from './guards/permiso.guard';
 
 import { LayoutComponent } from './layout/layout.component';
 import { UserDashboardComponent } from './pages/user-dashboard/user-dashboard';
@@ -29,14 +30,22 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard',        component: UserDashboardComponent },
       { path: 'monitoring',       component: MonitoringComponent },
-      { path: 'users',            component: UserManagementComponent },
-      { path: 'permissions',      component: PermissionsComponent },
-      { path: 'processes',        component: ProcessInventoryComponent },
-      { path: 'processes/new',    component: ProcessNewComponent },
-      { path: 'process-list',     component: ProcessListComponent },
-      { path: 'process-builder',  component: ProcessBuilderComponent },
-      { path: 'clients',          component: ClientDirectoryComponent },
-      { path: 'clients/:id',      component: ClientDetailComponent },
+      { path: 'users',            component: UserManagementComponent,
+        canActivate: [permisoGuard('USUARIO_VER')] },
+      { path: 'permissions',      component: PermissionsComponent,
+        canActivate: [permisoGuard('ROL_VER')] },
+      { path: 'processes',        component: ProcessInventoryComponent,
+        canActivate: [permisoGuard('PROCESO_VER')] },
+      { path: 'processes/new',    component: ProcessNewComponent,
+        canActivate: [permisoGuard('PROCESO_CREAR')] },
+      { path: 'process-list',     component: ProcessListComponent,
+        canActivate: [permisoGuard('PROCESO_VER')] },
+      { path: 'process-builder',  component: ProcessBuilderComponent,
+        canActivate: [permisoGuard('PROCESO_VER')] },
+      { path: 'clients',          component: ClientDirectoryComponent,
+        canActivate: [permisoGuard('POOL_ADMINISTRAR')] },
+      { path: 'clients/:id',      component: ClientDetailComponent,
+        canActivate: [permisoGuard('POOL_ADMINISTRAR')] },
     ],
   },
 

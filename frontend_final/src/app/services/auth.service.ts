@@ -48,6 +48,19 @@ export class AuthService {
     return getSession()?.rol === 'PROPIETARIO';
   }
 
+  /** ¿El usuario tiene el permiso indicado? El propietario siempre puede. */
+  can(codigo: string): boolean {
+    const session = getSession();
+    if (!session) return false;
+    if (session.rol === 'PROPIETARIO') return true;
+    return session.permisos?.includes(codigo) ?? false;
+  }
+
+  /** ¿Tiene al menos uno de los permisos indicados? */
+  canAny(...codigos: string[]): boolean {
+    return codigos.some((c) => this.can(c));
+  }
+
   private toSession(raw: any): UserSession {
     return {
       token: raw.token,
@@ -57,6 +70,7 @@ export class AuthService {
       poolId: raw.poolId ?? '',
       email: raw.email,
       rol: raw.rol ?? 'COLABORADOR',
+      permisos: Array.isArray(raw.permisos) ? raw.permisos : [],
     };
   }
 }

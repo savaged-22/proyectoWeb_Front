@@ -4,7 +4,9 @@
     <p class="subtitle">Define access control lists (ACL) and manage enterprise role pools.</p>
   </div>
   <div class="actions">
-    <button class="btn btn-primary" (click)="abrirModal()">+ Create Role Pool</button>
+    <button *ngIf="puedeCrearRol" class="btn btn-primary" (click)="abrirModal()">
+      + Create Role Pool
+    </button>
   </div>
 </header>
 
@@ -94,7 +96,10 @@
         <span class="matriz-hint" *ngIf="r.esPropietario">
           <app-icon name="lock"></app-icon> Rol del sistema — permisos no editables
         </span>
-        <span class="matriz-hint" *ngIf="!r.esPropietario">
+        <span class="matriz-hint" *ngIf="!r.esPropietario && !puedeEditarRol">
+          <app-icon name="lock"></app-icon> Solo lectura — no tienes permiso para editar
+        </span>
+        <span class="matriz-hint" *ngIf="!r.esPropietario && puedeEditarRol">
           Activá o desactivá cada permiso
         </span>
       </div>
@@ -122,9 +127,18 @@
               {{ has(r, p.codigo) ? 'Permitido' : 'Bloqueado' }}
             </span>
 
+            <span
+              class="badge perm-locked"
+              [class.green]="has(r, p.codigo)"
+              [class.gray]="!has(r, p.codigo)"
+              *ngIf="!r.esPropietario && !puedeEditarRol"
+            >
+              {{ has(r, p.codigo) ? 'Permitido' : 'Bloqueado' }}
+            </span>
+
             <button
               type="button"
-              *ngIf="!r.esPropietario"
+              *ngIf="!r.esPropietario && puedeEditarRol"
               class="perm-toggle"
               [class.on]="has(r, p.codigo)"
               [disabled]="guardandoCodigo !== null"

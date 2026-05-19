@@ -9,6 +9,8 @@ export interface UserSession {
   poolId: string;
   email: string;
   rol: 'PROPIETARIO' | 'COLABORADOR';
+  /** Códigos de permiso efectivos del usuario en su pool (PROCESO_VER, ROL_CREAR, …). */
+  permisos: string[];
 }
 
 const STORAGE_KEY = 'lulo.session';

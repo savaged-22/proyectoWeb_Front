@@ -88,12 +88,21 @@ export class PermissionsComponent implements OnInit {
     return role.permisos?.some((p) => p.codigo === codigo) ?? false;
   }
 
+  // ── Gating por permiso ──────────────────────────────────────────────────
+  get puedeCrearRol(): boolean {
+    return this.auth.can('ROL_CREAR');
+  }
+
+  get puedeEditarRol(): boolean {
+    return this.auth.can('ROL_EDITAR');
+  }
+
   // ── Matriz interactiva: prender/apagar permisos del rol ─────────────────
   guardandoCodigo: string | null = null;
   matrizError = '';
 
   togglePermisoRol(rol: RolPool, codigo: string): void {
-    if (rol.esPropietario || this.guardandoCodigo) return;
+    if (rol.esPropietario || !this.puedeEditarRol || this.guardandoCodigo) return;
 
     const codigosActuales = rol.permisos.map((p) => p.codigo);
     const nuevos = this.has(rol, codigo)
