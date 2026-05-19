@@ -54,6 +54,7 @@ export class AuthService {
       usuarioId: raw.usuarioId,
       empresaId: raw.empresaId,
       empresaNombre: raw.empresaNombre,
+      poolId: raw.poolId ?? '',
       email: raw.email,
       rol: raw.rol ?? 'COLABORADOR',
     };

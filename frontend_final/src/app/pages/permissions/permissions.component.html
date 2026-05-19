@@ -4,7 +4,7 @@
     <p class="subtitle">Define access control lists (ACL) and manage enterprise role pools.</p>
   </div>
   <div class="actions">
-    <button class="btn btn-primary">+ Create Role Pool</button>
+    <button class="btn btn-primary" (click)="abrirModal()">+ Create Role Pool</button>
   </div>
 </header>
 
@@ -122,3 +122,65 @@
     No tienes pools con roles configurados todavía.
   </div>
 </ng-container>
+
+<!-- Modal: Crear Role Pool -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Nuevo Role Pool</h3>
+      <button class="modal-close" (click)="cerrarModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre <span class="required">*</span></label>
+        <input
+          type="text"
+          [(ngModel)]="modalNombre"
+          placeholder="Ej: Editor de procesos"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Descripción</label>
+        <input
+          type="text"
+          [(ngModel)]="modalDescripcion"
+          placeholder="Opcional"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Permisos</label>
+        <div class="permiso-checkbox-list">
+          <label class="permiso-item" *ngFor="let p of catalogoPermisos">
+            <input
+              type="checkbox"
+              [checked]="modalPermisos.has(p.codigo)"
+              (change)="togglePermiso(p.codigo)"
+            />
+            <span class="permiso-codigo">{{ p.codigo }}</span>
+            <span class="permiso-desc">{{ p.descripcion }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-error" *ngIf="modalError">{{ modalError }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="cerrarModal()" [disabled]="modalLoading">
+        Cancelar
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="crearRol()"
+        [disabled]="modalLoading || !modalNombre.trim()"
+      >
+        {{ modalLoading ? 'Creando…' : 'Crear' }}
+      </button>
+    </div>
+  </div>
+</div>
