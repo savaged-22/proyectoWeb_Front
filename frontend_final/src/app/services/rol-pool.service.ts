@@ -37,4 +37,13 @@ export class RolPoolService {
   }): Observable<RolPool> {
     return this.http.post<RolPool>(this.base, payload);
   }
+
+  /** Reemplaza el conjunto de permisos de un rol. Rechazado por el backend en roles propietarios. */
+  actualizarPermisos(rolPoolId: string, codigosPermiso: string[]): Observable<RolPool> {
+    const session = this.auth.getSession();
+    return this.http.patch<RolPool>(`${this.base}/${rolPoolId}/permisos`, {
+      actualizadoPorId: session?.usuarioId,
+      codigosPermiso,
+    });
+  }
 }

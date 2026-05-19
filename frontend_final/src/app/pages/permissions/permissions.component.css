@@ -92,6 +92,137 @@
   margin: 1rem 0 0.5rem 0;
 }
 
+/* ── Matriz de permisos interactiva ── */
+.matriz-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.matriz-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+.matriz-error {
+  color: var(--color-danger);
+  font-size: 0.78rem;
+  background: var(--color-danger-bg);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.7rem;
+  margin-bottom: 0.5rem;
+}
+.perm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.perm-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-soft);
+  margin: 0.6rem 0 0.15rem;
+}
+.perm-group-label app-icon { font-size: 0.95rem; }
+.perm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+.perm-row.on {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.perm-row-icon {
+  font-size: 1.15rem;
+  width: 1.6rem;
+  display: flex;
+  justify-content: center;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+.perm-row.on .perm-row-icon { color: var(--color-primary); }
+.perm-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+  flex: 1;
+}
+.perm-row-text strong {
+  font-size: 0.83rem;
+  color: var(--color-text-strong);
+}
+.perm-row-text span {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+.perm-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-shrink: 0;
+}
+
+/* Switch deslizante */
+.perm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.perm-toggle:disabled { cursor: progress; opacity: 0.6; }
+.perm-toggle-track {
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-border);
+  position: relative;
+  transition: background 0.18s;
+  flex-shrink: 0;
+}
+.perm-toggle.on .perm-toggle-track { background: var(--color-success); }
+.perm-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s;
+}
+.perm-toggle.on .perm-toggle-knob { transform: translateX(16px); }
+.perm-toggle-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-soft);
+  width: 1.9rem;
+  text-align: left;
+}
+.perm-toggle.on .perm-toggle-label { color: var(--color-success); }
+
 /* ── Modal ── */
 .modal-overlay {
   position: fixed;
@@ -106,7 +237,7 @@
   background: var(--color-surface, #fff);
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  width: 480px;
+  width: 560px;
   max-width: 95vw;
   display: flex;
   flex-direction: column;
@@ -164,36 +295,112 @@
   transition: border-color 0.15s;
 }
 .form-input:focus { border-color: var(--color-primary, #2563eb); }
-.permiso-checkbox-list {
+/* ── Selector de permisos: tarjetas con iconos agrupadas ── */
+.permisos-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.permisos-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.permiso-grupos {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  max-height: 200px;
+  gap: 0.75rem;
+  max-height: 340px;
   overflow-y: auto;
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
-  padding: 0.5rem;
+  padding-right: 0.25rem;
 }
-.permiso-item {
+.permiso-grupo {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  background: var(--color-bg);
+}
+.grupo-head {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+.grupo-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+.grupo-titulo app-icon { font-size: 1rem; color: var(--color-text-muted); }
+.grupo-toggle {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.25rem 0.3rem;
-  border-radius: 4px;
+  transition: all 0.15s;
 }
-.permiso-item:hover { background: var(--color-bg, #f9fafb); }
-.permiso-codigo {
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: var(--color-text-strong, #111);
-  min-width: 140px;
+.grupo-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.grupo-toggle.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
 }
-.permiso-desc {
-  color: var(--color-text-muted, #6b7280);
+.permiso-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 0.5rem;
+}
+.permiso-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.65rem 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  font-family: inherit;
+}
+.permiso-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.permiso-card-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+.permiso-card.selected .permiso-card-icon { color: var(--color-primary); }
+.permiso-card-label {
   font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-strong);
 }
+.permiso-card-state {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-soft);
+}
+.permiso-card.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.permiso-card.selected .permiso-card-state { color: var(--color-success); }
 .modal-error {
   color: #dc2626;
   font-size: 0.82rem;

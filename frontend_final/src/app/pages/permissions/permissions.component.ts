@@ -7,11 +7,12 @@ import { Permiso, RolPool } from '../../core/models/rol-pool';
 import { PoolService } from '../../services/pool.service';
 import { RolPoolService } from '../../services/rol-pool.service';
 import { AuthService } from '../../services/auth.service';
+import { IconComponent } from '../../shared/icon.component';
 
 @Component({
   selector: 'app-permissions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './permissions.component.html',
   styleUrls: ['./permissions.component.css'],
 })
@@ -87,6 +88,35 @@ export class PermissionsComponent implements OnInit {
     return role.permisos?.some((p) => p.codigo === codigo) ?? false;
   }
 
+  // ── Matriz interactiva: prender/apagar permisos del rol ─────────────────
+  guardandoCodigo: string | null = null;
+  matrizError = '';
+
+  togglePermisoRol(rol: RolPool, codigo: string): void {
+    if (rol.esPropietario || this.guardandoCodigo) return;
+
+    const codigosActuales = rol.permisos.map((p) => p.codigo);
+    const nuevos = this.has(rol, codigo)
+      ? codigosActuales.filter((c) => c !== codigo)
+      : [...codigosActuales, codigo];
+
+    this.guardandoCodigo = codigo;
+    this.matrizError = '';
+
+    this.rolPoolService.actualizarPermisos(rol.id, nuevos).subscribe({
+      next: (actualizado) => {
+        const idx = this.roles.findIndex((r) => r.id === actualizado.id);
+        if (idx >= 0) this.roles[idx] = actualizado;
+        if (this.selectedRole?.id === actualizado.id) this.selectedRole = actualizado;
+        this.guardandoCodigo = null;
+      },
+      error: (err) => {
+        this.matrizError = err.error?.message ?? 'No se pudo actualizar el permiso.';
+        this.guardandoCodigo = null;
+      },
+    });
+  }
+
   get rolesPropietarios(): number {
     return this.roles.filter((r) => r.esPropietario).length;
   }
@@ -111,6 +141,62 @@ export class PermissionsComponent implements OnInit {
     this.modalPermisos.has(codigo)
       ? this.modalPermisos.delete(codigo)
       : this.modalPermisos.add(codigo);
+  }
+
+  // ── Catálogo de permisos agrupado para el modal ─────────────────────────
+  private static readonly GRUPOS: { prefijo: string; label: string; icono: string }[] = [
+    { prefijo: 'PROCESO',  label: 'Procesos', icono: 'procesos' },
+    { prefijo: 'DIAGRAMA', label: 'Diagrama', icono: 'diagrama' },
+    { prefijo: 'ROL',      label: 'Roles',    icono: 'roles' },
+    { prefijo: 'USUARIO',  label: 'Usuarios', icono: 'usuarios' },
+  ];
+
+  private static readonly ICONOS_ACCION: Record<string, string> = {
+    VER: 'eye', CREAR: 'plus', EDITAR: 'pencil', ELIMINAR: 'trash',
+    PUBLICAR: 'publish', COMPARTIR: 'share', INVITAR: 'mail', REVOCAR: 'ban',
+    ADMINISTRAR: 'cog',
+  };
+
+  private static readonly ETIQUETAS_ACCION: Record<string, string> = {
+    VER: 'Ver', CREAR: 'Crear', EDITAR: 'Editar', ELIMINAR: 'Eliminar',
+    PUBLICAR: 'Publicar', COMPARTIR: 'Compartir', INVITAR: 'Invitar',
+    REVOCAR: 'Revocar', ADMINISTRAR: 'Administrar',
+  };
+
+  /** Agrupa el catálogo por prefijo del código; lo no reconocido va a "Administración". */
+  get gruposPermiso(): { label: string; icono: string; permisos: Permiso[] }[] {
+    const grupos = PermissionsComponent.GRUPOS.map((g) => ({
+      label: g.label,
+      icono: g.icono,
+      permisos: this.catalogoPermisos.filter((p) => p.codigo.startsWith(g.prefijo + '_')),
+    }));
+    const conocidos = new Set(grupos.flatMap((g) => g.permisos.map((p) => p.codigo)));
+    const otros = this.catalogoPermisos.filter((p) => !conocidos.has(p.codigo));
+    if (otros.length) grupos.push({ label: 'Administración', icono: 'cog', permisos: otros });
+    return grupos.filter((g) => g.permisos.length > 0);
+  }
+
+  iconoPermiso(codigo: string): string {
+    const accion = codigo.split('_')[1] ?? '';
+    return PermissionsComponent.ICONOS_ACCION[accion] ?? 'key';
+  }
+
+  etiquetaPermiso(codigo: string): string {
+    const accion = codigo.split('_')[1] ?? codigo;
+    return PermissionsComponent.ETIQUETAS_ACCION[accion] ?? accion.toLowerCase();
+  }
+
+  estadoGrupo(permisos: Permiso[]): 'none' | 'some' | 'all' {
+    const sel = permisos.filter((p) => this.modalPermisos.has(p.codigo)).length;
+    if (sel === 0) return 'none';
+    return sel === permisos.length ? 'all' : 'some';
+  }
+
+  toggleGrupo(permisos: Permiso[]): void {
+    const quitar = this.estadoGrupo(permisos) === 'all';
+    for (const p of permisos) {
+      quitar ? this.modalPermisos.delete(p.codigo) : this.modalPermisos.add(p.codigo);
+    }
   }
 
   crearRol(): void {

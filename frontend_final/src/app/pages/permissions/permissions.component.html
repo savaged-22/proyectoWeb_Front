@@ -67,7 +67,7 @@
           (click)="selectRole(r)"
         >
           <div class="role-icon" [class.owner]="r.esPropietario">
-            {{ r.esPropietario ? '★' : '👤' }}
+            <app-icon [name]="r.esPropietario ? 'roles' : 'user'"></app-icon>
           </div>
           <div class="role-details">
             <strong>{{ r.nombre }}</strong>
@@ -89,30 +89,62 @@
         </span>
       </div>
 
-      <h4 class="section-heading">Module Access Matrix</h4>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Permiso</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let p of catalogoPermisos">
-            <td><strong>{{ p.codigo }}</strong></td>
-            <td>{{ p.descripcion }}</td>
-            <td>
-              <span class="badge" [class]="has(r, p.codigo) ? 'badge green' : 'badge gray'">
-                {{ has(r, p.codigo) ? '● ALLOWED' : '○ DENIED' }}
+      <div class="matriz-head">
+        <h4 class="section-heading">Permisos del rol</h4>
+        <span class="matriz-hint" *ngIf="r.esPropietario">
+          <app-icon name="lock"></app-icon> Rol del sistema — permisos no editables
+        </span>
+        <span class="matriz-hint" *ngIf="!r.esPropietario">
+          Activá o desactivá cada permiso
+        </span>
+      </div>
+
+      <div class="matriz-error" *ngIf="matrizError">{{ matrizError }}</div>
+
+      <div class="perm-rows">
+        <ng-container *ngFor="let g of gruposPermiso">
+          <div class="perm-group-label">
+            <app-icon [name]="g.icono"></app-icon> {{ g.label }}
+          </div>
+          <div
+            class="perm-row"
+            *ngFor="let p of g.permisos"
+            [class.on]="has(r, p.codigo)"
+          >
+            <span class="perm-row-icon"><app-icon [name]="iconoPermiso(p.codigo)"></app-icon></span>
+            <div class="perm-row-text">
+              <strong>{{ etiquetaPermiso(p.codigo) }}</strong>
+              <span>{{ p.descripcion }}</span>
+            </div>
+
+            <span class="badge amber perm-locked" *ngIf="r.esPropietario">
+              <app-icon name="lock"></app-icon>
+              {{ has(r, p.codigo) ? 'Permitido' : 'Bloqueado' }}
+            </span>
+
+            <button
+              type="button"
+              *ngIf="!r.esPropietario"
+              class="perm-toggle"
+              [class.on]="has(r, p.codigo)"
+              [disabled]="guardandoCodigo !== null"
+              [attr.aria-pressed]="has(r, p.codigo)"
+              (click)="togglePermisoRol(r, p.codigo)"
+            >
+              <span class="perm-toggle-track">
+                <span class="perm-toggle-knob"></span>
               </span>
-            </td>
-          </tr>
-          <tr *ngIf="catalogoPermisos.length === 0">
-            <td colspan="3" class="state">Sin permisos en el catálogo.</td>
-          </tr>
-        </tbody>
-      </table>
+              <span class="perm-toggle-label">
+                {{ guardandoCodigo === p.codigo ? '…' : (has(r, p.codigo) ? 'ON' : 'OFF') }}
+              </span>
+            </button>
+          </div>
+        </ng-container>
+
+        <div class="state" *ngIf="catalogoPermisos.length === 0">
+          Sin permisos en el catálogo.
+        </div>
+      </div>
     </div>
   </div>
 </ng-container>
@@ -153,17 +185,50 @@
       </div>
 
       <div class="form-group">
-        <label>Permisos</label>
-        <div class="permiso-checkbox-list">
-          <label class="permiso-item" *ngFor="let p of catalogoPermisos">
-            <input
-              type="checkbox"
-              [checked]="modalPermisos.has(p.codigo)"
-              (change)="togglePermiso(p.codigo)"
-            />
-            <span class="permiso-codigo">{{ p.codigo }}</span>
-            <span class="permiso-desc">{{ p.descripcion }}</span>
-          </label>
+        <div class="permisos-head">
+          <label>Permisos</label>
+          <span class="permisos-count">
+            {{ modalPermisos.size }}/{{ catalogoPermisos.length }} elegidos
+          </span>
+        </div>
+
+        <div class="permiso-grupos">
+          <div class="permiso-grupo" *ngFor="let g of gruposPermiso">
+            <div class="grupo-head">
+              <span class="grupo-titulo">
+                <app-icon [name]="g.icono"></app-icon> {{ g.label }}
+              </span>
+              <button
+                type="button"
+                class="grupo-toggle"
+                [class.active]="estadoGrupo(g.permisos) !== 'none'"
+                (click)="toggleGrupo(g.permisos)"
+              >
+                {{ estadoGrupo(g.permisos) === 'all' ? 'Quitar todos' : 'Todos' }}
+              </button>
+            </div>
+            <div class="permiso-cards">
+              <button
+                type="button"
+                class="permiso-card"
+                *ngFor="let p of g.permisos"
+                [class.selected]="modalPermisos.has(p.codigo)"
+                (click)="togglePermiso(p.codigo)"
+                [title]="p.descripcion"
+              >
+                <span class="permiso-card-icon">
+                  <app-icon [name]="iconoPermiso(p.codigo)"></app-icon>
+                </span>
+                <span class="permiso-card-label">{{ etiquetaPermiso(p.codigo) }}</span>
+                <span class="permiso-card-state">
+                  {{ modalPermisos.has(p.codigo) ? '✓ ON' : 'OFF' }}
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="state" *ngIf="catalogoPermisos.length === 0">
+            Sin permisos en el catálogo.
+          </div>
         </div>
       </div>
 
