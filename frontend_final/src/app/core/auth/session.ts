@@ -6,6 +6,7 @@ export interface UserSession {
   usuarioId: string;
   empresaId: string;
   empresaNombre: string;
+  poolId: string;
   email: string;
   rol: 'PROPIETARIO' | 'COLABORADOR';
 }

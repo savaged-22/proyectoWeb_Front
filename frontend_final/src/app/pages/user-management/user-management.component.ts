@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { EmpresaDetail, UsuarioBasico } from '../../core/models/empresa';
+import { RolPool } from '../../core/models/rol-pool';
 import { EmpresaService } from '../../services/empresa.service';
 import { AuthService } from '../../services/auth.service';
+import { RolPoolService } from '../../services/rol-pool.service';
+import { InvitacionService } from '../../services/invitacion.service';
 
 @Component({
   selector: 'app-user-management',
@@ -16,14 +19,19 @@ import { AuthService } from '../../services/auth.service';
 export class UserManagementComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private auth = inject(AuthService);
+  private rolPoolService = inject(RolPoolService);
+  private invitacionService = inject(InvitacionService);
 
   empresa?: EmpresaDetail;
+  roles: RolPool[] = [];
   loading = true;
   error = '';
   searchQuery = '';
 
   inviteEmail = '';
-  inviteRol = 'Editor';
+  inviteRolPoolId = '';
+  inviteStatus = '';
+  inviting = false;
 
   ngOnInit(): void {
     const session = this.auth.getSession();
@@ -41,6 +49,38 @@ export class UserManagementComponent implements OnInit {
         console.error(err);
         this.error = 'No se pudo cargar el directorio de usuarios.';
         this.loading = false;
+      },
+    });
+    if (session.poolId) {
+      this.rolPoolService.listar(session.poolId).subscribe({
+        next: (roles) => {
+          this.roles = roles;
+          if (roles.length > 0) this.inviteRolPoolId = roles[0].id;
+        },
+        error: () => {},
+      });
+    }
+  }
+
+  sendInvitation(): void {
+    const session = this.auth.getSession();
+    if (!session || !this.inviteEmail || !this.inviteRolPoolId) return;
+    this.inviting = true;
+    this.inviteStatus = '';
+    this.invitacionService.invitar({
+      empresaId: session.empresaId,
+      rolPoolId: this.inviteRolPoolId,
+      invitadoPorId: session.usuarioId,
+      emailInvitado: this.inviteEmail,
+    }).subscribe({
+      next: (res) => {
+        this.inviteStatus = `Invitación enviada a ${res.emailInvitado}`;
+        this.inviteEmail = '';
+        this.inviting = false;
+      },
+      error: (err) => {
+        this.inviteStatus = err?.error?.message ?? 'Error al enviar invitación.';
+        this.inviting = false;
       },
     });
   }

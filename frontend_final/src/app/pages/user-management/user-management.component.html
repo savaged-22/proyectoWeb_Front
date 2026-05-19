@@ -80,13 +80,15 @@
         </div>
         <div class="form-group">
           <label>Default Role</label>
-          <select [(ngModel)]="inviteRol">
-            <option>Editor</option>
-            <option>Viewer</option>
-            <option>Admin</option>
+          <select [(ngModel)]="inviteRolPoolId">
+            <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
+            <option *ngIf="roles.length === 0" value="" disabled>No hay roles disponibles</option>
           </select>
         </div>
-        <button class="btn btn-primary w-full">Send Invitation</button>
+        <button class="btn btn-primary w-full" (click)="sendInvitation()" [disabled]="inviting || !inviteEmail || !inviteRolPoolId">
+          {{ inviting ? 'Enviando…' : 'Send Invitation' }}
+        </button>
+        <p *ngIf="inviteStatus" class="hint mt-1" style="color: var(--color-success, green)">{{ inviteStatus }}</p>
       </div>
 
       <div class="panel mt-2">
