@@ -20,6 +20,7 @@ export class ClientDirectoryComponent implements OnInit {
   empresas: EmpresaListItem[] = [];
   loading = true;
   loadError = '';
+  showForm = false;
 
   // form state
   form: RegistroEmpresaRequest = {
@@ -81,6 +82,7 @@ export class ClientDirectoryComponent implements OnInit {
           emailAdmin: '',
           password: '',
         };
+        this.showForm = false;
         this.refresh();
       },
       error: (err) => {

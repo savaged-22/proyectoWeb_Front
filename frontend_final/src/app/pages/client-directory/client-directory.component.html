@@ -12,13 +12,15 @@
     </p>
   </div>
   <div class="actions">
-    <button class="btn btn-primary" (click)="form.nombreEmpresa = form.nombreEmpresa">+ Add New Empresa</button>
+    <button class="btn btn-primary" (click)="showForm = !showForm">
+      {{ showForm ? '✕ Cancel' : '+ Add New Empresa' }}
+    </button>
   </div>
 </header>
 
 <div class="grid">
   <!-- Registration form -->
-  <div class="panel">
+  <div class="panel" *ngIf="showForm">
     <div class="panel-header">
       <div class="panel-title">Registration</div>
     </div>
