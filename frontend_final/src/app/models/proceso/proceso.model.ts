@@ -11,6 +11,7 @@ export interface Proceso {
   categoria: string;
   estado: string;
   activo: boolean;
+  esPlantilla: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,7 @@ export interface ProcesoPage {
   size: number;
 }
 
+// Elementos del Diagrama
 export interface ProcesoLane {
   id: string;
   nombre: string;
@@ -54,6 +56,7 @@ export interface ProcesoDetalle extends Proceso {
   arcos: ProcesoArco[];
 }
 
+// DTOs Request/Response Mapeados Exactos del Backend
 export interface CrearProcesoRequest {
   empresaId: string;
   poolId: string;
@@ -62,6 +65,20 @@ export interface CrearProcesoRequest {
   descripcion?: string;
   categoria?: string;
   estado?: 'borrador' | 'publicado';
+  esPlantilla?: boolean;
+  disenoBaseId?: string;
+}
+
+export interface EditarProcesoRequest {
+  editadoPorId: string; // Requerido por el @NotNull del backend
+  nombre?: string;
+  descripcion?: string;
+  categoria?: string;
+  estado?: 'borrador' | 'publicado';
+}
+
+export interface EliminarProcesoRequest {
+  eliminadoPorId: string;
 }
 
 export interface ProcesoFilters {

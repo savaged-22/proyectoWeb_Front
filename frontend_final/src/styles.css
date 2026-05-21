@@ -1,6 +1,9 @@
 /* ────────────────────────────────────────────────────────────────────────────
    Global design tokens & shared utilities
    ──────────────────────────────────────────────────────────────────────────── */
+@import 'bpmn-js/dist/assets/diagram-js.css';
+@import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
+@import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 :root {
   --color-primary: #0052cc;
   --color-primary-dark: #0043a6;

@@ -27,4 +27,14 @@ export class RolPoolService {
       .set('usuarioId', session?.usuarioId ?? '');
     return this.http.get<Permiso[]>(`${this.base}/permisos`, { params });
   }
+
+  crear(payload: {
+    poolId: string;
+    creadoPorId: string;
+    nombre: string;
+    descripcion?: string;
+    codigosPermiso: string[];
+  }): Observable<RolPool> {
+    return this.http.post<RolPool>(this.base, payload);
+  }
 }

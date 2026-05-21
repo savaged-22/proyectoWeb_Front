@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ProcesoService } from '../../services/proceso.service';
-import { Proceso } from '../../core/models/proceso';
+import { Proceso } from '../../models/proceso/proceso.model';
 import { AuthService } from '../../services/auth.service';
 
 @Component({

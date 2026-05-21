@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-monitoring',
@@ -13,17 +14,18 @@ import { environment } from '../../../environments/environment';
 })
 export class MonitoringComponent implements OnInit {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private apiUrl = environment.apiUrl;
 
-  messages: any[] = [];
-  subscriptions: any[] = [];
+  casos: any[] = [];
+  procesosMetricas: any[] = [];
   logs: any[] = [];
   
   // KPI Metrics
-  totalMessages = 0;
-  pendingTasks = 0;
-  activeSubs = 0;
-  errorRate = '0.00%';
+  totalActivos = 0;
+  tareasPendientes = 0;
+  procesosInstanciadosHoy = 0;
+  tasaError = '0.00%';
 
   ngOnInit() {
     this.fetchDashboardData();
@@ -32,71 +34,59 @@ export class MonitoringComponent implements OnInit {
   }
 
   fetchDashboardData() {
-    this.http.get<any>(`${this.apiUrl}/mensajes/dashboard`).subscribe({
+    const session = this.authService.getSession();
+    if (!session) return;
+
+    this.http.get<any>(`${this.apiUrl}/casos/dashboard?empresaId=${session.empresaId}`).subscribe({
       next: (data) => {
-        if (data.mensajes) {
-          this.messages = data.mensajes.map((m: any) => ({
-            name: m.nombre_mensaje,
-            status: m.estado,
-            key: m.correlation_key || 'N/A',
-            date: this.formatDate(m.created_at),
-            size: m.payload_size ? `${(m.payload_size / 1024).toFixed(1)} KB` : '0 KB',
-            action: m.estado === 'FAILED' ? 'Retry' : 'Inspect'
-          }));
-          this.totalMessages = data.mensajes.length; // In real life, this would be a count query
-          this.pendingTasks = data.mensajes.filter((m:any) => m.estado === 'pendiente' || m.estado === 'PENDING').length;
-          
-          const errorCount = data.mensajes.filter((m:any) => m.estado === 'FAILED' || m.estado === 'error').length;
-          this.errorRate = this.totalMessages > 0 ? `${((errorCount / this.totalMessages) * 100).toFixed(2)}%` : '0.00%';
+        this.totalActivos = data.totalActivos || 0;
+        this.tareasPendientes = data.tareasPendientes || 0;
+        this.procesosInstanciadosHoy = data.procesosInstanciadosHoy || 0;
+        this.tasaError = data.tasaError || '0.00%';
+
+        if (data.casosActivos) {
+          this.casos = data.casosActivos;
         }
 
-        if (data.suscripciones) {
-          this.subscriptions = data.suscripciones.map((s: any, idx: number) => ({
-            type: `EVENT-BUS-0${idx + 1}`,
-            name: s.nombre_mensaje,
-            depth: '0', // Mocked as we don't have queue depth in DB
-            throughput: '1.2k msg/s', // Mocked
-            subId: `sub_dyn_${idx}`,
-            status: s.is_active ? 'ok' : 'warning'
-          }));
-          this.activeSubs = data.suscripciones.filter((s: any) => s.is_active).length;
+        if (data.metricasProcesos) {
+          this.procesosMetricas = data.metricasProcesos;
         }
 
-        if (data.entregas) {
-          this.logs = data.entregas.map((e: any) => {
-            const isError = e.estado === 'FAILED' || e.estado === 'error';
-            return {
-              time: this.formatTime(e.delivered_at || new Date()),
-              level: isError ? 'ERR' : 'INFO',
-              levelClass: isError ? 'err' : 'info',
-              msg: isError ? `Delivery failed for message. Status: ${e.estado}` : `Delivery success. Status: ${e.estado}`,
-              isErrorBlock: isError
-            };
-          });
+        if (data.ultimosLogs) {
+          this.logs = data.ultimosLogs;
         }
-        
-        // Use fallbacks if DB is empty to maintain the visual wow-factor
-        if (this.messages.length === 0) this.loadMockMessages();
-        if (this.subscriptions.length === 0) this.loadMockSubscriptions();
-        if (this.logs.length === 0) this.loadMockLogs();
       },
       error: (err) => {
         console.error('Error fetching monitoring data', err);
-        this.loadMockMessages();
-        this.loadMockSubscriptions();
+        this.loadMockCasos();
+        this.loadMockMetricas();
         this.loadMockLogs();
       }
     });
   }
 
   seedData() {
-    this.http.post(`${this.apiUrl}/mensajes/seed`, {}, { responseType: 'text' }).subscribe({
+    const session = this.authService.getSession();
+    if (!session) return;
+    
+    // Buscar un proceso válido de las métricas para instanciar
+    let procesoId = localStorage.getItem('lastProcesoId');
+    if (!procesoId || procesoId === '00000000-0000-0000-0000-000000000000') {
+        // En un caso real, el usuario elegiría el proceso de un dropdown.
+        // Aquí pediremos al backend que nos traiga los procesos o usamos uno quemado
+        // Mejor aún: el endpoint de iniciarCaso podría recibir null y elegir uno al azar para testear,
+        // Pero para no modificar más el backend, le pediremos al usuario que navegue al builder primero.
+        alert('Por favor abre el Process Builder en cualquier proceso para que el sistema guarde el ID, y luego intenta de nuevo.');
+        return;
+    }
+    
+    this.http.post(`${this.apiUrl}/casos/iniciar?procesoId=${procesoId}&usuarioId=${session.usuarioId}`, {}).subscribe({
       next: (res) => {
-        alert(res);
+        alert('Caso iniciado correctamente.');
         this.fetchDashboardData();
       },
       error: (err) => {
-        alert('Error seeding data: ' + err.message);
+        alert('Aún no tienes procesos válidos creados. Crea un proceso primero en el Builder.');
       }
     });
   }
@@ -107,42 +97,35 @@ export class MonitoringComponent implements OnInit {
     if (isNaN(d.getTime())) return String(dateObj);
     return d.toISOString().replace('T', ' ').substring(0, 19);
   }
-  
-  formatTime(dateObj: any): string {
-    if (!dateObj) return '';
-    const d = new Date(dateObj);
-    if (isNaN(d.getTime())) return '';
-    return d.toTimeString().substring(0, 8);
+
+  loadMockCasos() {
+    this.casos = [
+      { id: 'CASO-9928-XA', procesoNombre: 'Aprobación de Crédito', estado: 'EN_PROGRESO', actividadActual: 'Revisión Manual', fechaInicio: '2023-10-27 14:22:01' },
+      { id: 'CASO-0114-BK', procesoNombre: 'Onboarding Cliente', estado: 'PENDIENTE', actividadActual: 'Esperando Firma', fechaInicio: '2023-10-27 14:22:15' },
+      { id: 'CASO-5521-LM', procesoNombre: 'Aprobación de Crédito', estado: 'COMPLETADO', actividadActual: 'Fin', fechaInicio: '2023-10-27 14:21:44' },
+      { id: 'CASO-3329-CQ', procesoNombre: 'Pago a Proveedores', estado: 'ERROR', actividadActual: 'Validación KYC', fechaInicio: '2023-10-27 14:20:55' }
+    ];
+    this.totalActivos = 142;
+    this.tareasPendientes = 34;
+    this.tasaError = '1.04%';
+    this.procesosInstanciadosHoy = 250;
   }
 
-  loadMockMessages() {
-    this.messages = [
-      { name: 'ORDER_RECEIVED_V2', status: 'Delivered', key: 'CORR-9928-XA-104', date: '2023-10-27 14:22:01', size: '4.2 KB', action: 'Inspect' },
-      { name: 'INVENTORY_UPDATE_TRIGGER', status: 'Pending', key: 'CORR-0114-BK-442', date: '2023-10-27 14:22:15', size: '1.8 KB', action: 'Inspect' },
-      { name: 'PAYMENT_AUTH_SUCCESS', status: 'Delivered', key: 'CORR-5521-LM-902', date: '2023-10-27 14:21:44', size: '12.5 KB', action: 'Inspect' },
-      { name: 'CUSTOMER_KYC_VERIFY', status: 'Failed', key: 'CORR-3329-CQ-111', date: '2023-10-27 14:20:55', size: '0.2 KB', action: 'Retry' }
+  loadMockMetricas() {
+    this.procesosMetricas = [
+      { nombreProceso: 'Aprobación de Crédito', casosActivos: 86, tiempoPromedio: '4h 12m' },
+      { nombreProceso: 'Onboarding Cliente', casosActivos: 40, tiempoPromedio: '1d 2h' },
+      { nombreProceso: 'Pago a Proveedores', casosActivos: 16, tiempoPromedio: '45m' }
     ];
-    this.totalMessages = 14208;
-    this.pendingTasks = 142;
-    this.errorRate = '0.04%';
-  }
-
-  loadMockSubscriptions() {
-    this.subscriptions = [
-      { type: 'EVENT-BUS-01', name: 'OrderProcessingWorker', depth: '1,202', throughput: '450 msg/s', subId: 'sub_8f72_active_prod', status: 'ok' },
-      { type: 'EVENT-BUS-02', name: 'AnalyticsIngestor', depth: '0', throughput: '12.1k msg/s', subId: 'sub_analyt_331_prod', status: 'ok' },
-      { type: 'LEGACY-ADAPTER', name: 'EmailNotifier', depth: '14,800', throughput: '5 msg/s', subId: 'sub_mail_002_legacy', status: 'warning' }
-    ];
-    this.activeSubs = 86;
   }
   
   loadMockLogs() {
     this.logs = [
-      { time: '14:22:45', level: 'INFO', levelClass: 'info', msg: 'Delivery success: MSG_ID=8823 -> SUBSCRIBER=OrderWorker', isErrorBlock: false },
-      { time: '14:22:44', level: 'INFO', levelClass: 'info', msg: 'ACK received for CORR-9928-XA-104', isErrorBlock: false },
-      { time: '14:22:42', level: 'WARN', levelClass: 'warn', msg: 'Retry attempt 2/3 for MSG_ID=1102 (Timeout)', isErrorBlock: false },
-      { time: '14:22:38', level: 'ERR', levelClass: 'err', msg: 'Validation failed: Payload missing customer_id', isErrorBlock: true },
-      { time: '14:22:31', level: 'TRACE', levelClass: 'trace', msg: 'Schema validated for message type: ORDER_V2', isErrorBlock: false }
+      { tiempo: '14:22:45', nivel: 'INFO', claseCss: 'info', mensaje: 'Caso iniciado: Aprobación de Crédito', isErrorBlock: false },
+      { tiempo: '14:22:44', nivel: 'INFO', claseCss: 'info', mensaje: 'Tarea completada por Analista', isErrorBlock: false },
+      { tiempo: '14:22:42', nivel: 'WARN', claseCss: 'warn', mensaje: 'Caso CASO-0114 atascado en espera de firma', isErrorBlock: false },
+      { tiempo: '14:22:38', nivel: 'ERR', claseCss: 'err', mensaje: 'Fallo en Servicio KYC remoto. Reintentando...', isErrorBlock: true },
+      { tiempo: '14:22:31', nivel: 'INFO', claseCss: 'trace', mensaje: 'Caso finalizado exitosamente.', isErrorBlock: false }
     ];
   }
 }

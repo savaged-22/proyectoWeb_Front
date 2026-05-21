@@ -5,11 +5,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   CrearProcesoRequest,
+  EditarProcesoRequest,
+  EliminarProcesoRequest,
   Proceso,
   ProcesoDetalle,
   ProcesoFilters,
   ProcesoPage,
-} from '../core/models/proceso';
+} from '../models/proceso/proceso.model';
 import { AuthService } from './auth.service';
 
 
@@ -52,5 +54,26 @@ export class ProcesoService {
       .set('empresaId', session?.empresaId ?? '')
       .set('usuarioId', session?.usuarioId ?? '');
     return this.http.get<ProcesoDetalle>(`${this.base}/${id}`, { params });
+  }
+
+  cambiarEstado(id: string, nuevoEstado: string): Observable<any> {
+    return this.http.put(`${this.base}/${id}/estado`, { estado: nuevoEstado });
+  }
+
+  editar(id: string, body: Omit<EditarProcesoRequest, 'editadoPorId'>): Observable<Proceso> {
+    const session = this.auth.getSession();
+    const payload: EditarProcesoRequest = {
+      ...body,
+      editadoPorId: session?.usuarioId ?? '',
+    };
+    return this.http.patch<Proceso>(`${this.base}/${id}`, payload);
+  }
+
+  eliminar(id: string): Observable<void> {
+    const session = this.auth.getSession();
+    const payload: EliminarProcesoRequest = {
+      eliminadoPorId: session?.usuarioId ?? '',
+    };
+    return this.http.delete<void>(`${this.base}/${id}`, { body: payload });
   }
 }
