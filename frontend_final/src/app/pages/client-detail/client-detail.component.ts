@@ -44,10 +44,10 @@ export class ClientDetailComponent implements OnInit {
 
   get filteredUsuarios() {
     if (!this.empresa) return [];
-    if (!this.filterText) return this.empresa.usuarios;
+    if (!this.filterText) return this.empresa.usuarios ?? [];
     const q = this.filterText.toLowerCase();
-    return this.empresa.usuarios.filter(
-      (u) => u.email.toLowerCase().includes(q) || u.rolPrincipal.toLowerCase().includes(q)
+    return (this.empresa.usuarios ?? []).filter(
+      (u) => (u.email || '').toLowerCase().includes(q) || (u.rolPrincipal || '').toLowerCase().includes(q)
     );
   }
 

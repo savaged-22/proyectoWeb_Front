@@ -12,12 +12,6 @@ import {
 } from '../core/models/proceso';
 import { AuthService } from './auth.service';
 
-@Injectable({ providedIn: 'root' })
-export interface ProcesoDetalleResponse extends ProcesoResponse {
-  lanes: any[]; //hacerlos tipados
-  nodos: any[];
-  arcos: any[];
-}
 
 @Injectable({
   providedIn: 'root'

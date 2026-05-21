@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
+
 // ─── Shared ───────────────────────────────────────────────────────────────────
 export interface NodoResponse {
   id: string;
@@ -114,7 +116,7 @@ export interface EliminarRequest {
 @Injectable({ providedIn: 'root' })
 export class DiagramService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8081/api/procesos';
+  private base = `${environment.apiUrl}/procesos`;
 
   private url(procesoId: string, resource: string): string {
     return `${this.base}/${procesoId}/${resource}`;
