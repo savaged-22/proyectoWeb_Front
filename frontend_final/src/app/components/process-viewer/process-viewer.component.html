@@ -1,0 +1,19 @@
+<div class="pv-wrap" [style.height]="height">
+  <div class="pv-toolbar" *ngIf="!error && procesoActual">
+    <div class="pv-title">
+      <span class="pv-icon">👁️</span>
+      <strong>{{ procesoActual.nombre }}</strong>
+      <span class="pv-meta">{{ procesoActual.categoria || '—' }} · {{ procesoActual.estado }}</span>
+    </div>
+    <div class="pv-actions">
+      <button type="button" (click)="zoomOut()" title="Alejar">−</button>
+      <button type="button" (click)="zoomFit()" title="Ajustar">⤢</button>
+      <button type="button" (click)="zoomIn()" title="Acercar">+</button>
+    </div>
+  </div>
+
+  <div class="pv-canvas" #viewerCanvas></div>
+
+  <div class="pv-overlay" *ngIf="cargando">Cargando diagrama…</div>
+  <div class="pv-overlay pv-error" *ngIf="error">{{ error }}</div>
+</div>

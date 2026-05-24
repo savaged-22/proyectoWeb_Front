@@ -1,15 +1,30 @@
 /**
- * Modelo de la sesión guardada en localStorage tras hacer login.
+ * Sesión guardada en localStorage tras login/refresh.
+ *
+ * tipoUsuario es el nivel global de la app:
+ *   SUPERADMIN    -> dueño de la aplicación, ve todas las empresas
+ *   ADMIN_EMPRESA -> admin de una empresa cliente
+ *   USUARIO       -> usuario regular
+ *
+ * rol es el rol "legacy" dentro del pool, derivado del tipo o del rol_pool.
  */
+export type TipoUsuario = 'SUPERADMIN' | 'ADMIN_EMPRESA' | 'USUARIO';
+
 export interface UserSession {
   token: string;
+  expiresInMs?: number;
   usuarioId: string;
   empresaId: string;
   empresaNombre: string;
   poolId: string;
   email: string;
-  rol: 'PROPIETARIO' | 'COLABORADOR';
-  /** Códigos de permiso efectivos del usuario en su pool (PROCESO_VER, ROL_CREAR, …). */
+  rol: 'PROPIETARIO' | 'COLABORADOR' | 'ADMIN_EMPRESA' | 'SUPERADMIN';
+  tipoUsuario: TipoUsuario;
+  esSuperadmin: boolean;
+  esAdminEmpresa: boolean;
+  /** True si el usuario pertenece a la empresa interna de Lulo (consola owner). */
+  empresaEsLulo: boolean;
+  /** Códigos de permiso efectivos (PROCESO_VER, ROL_CREAR, …). */
   permisos: string[];
 }
 
@@ -21,9 +36,12 @@ const isBrowser = (): boolean =>
 export function saveSession(session: UserSession): void {
   if (!isBrowser()) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  // legacy keys for compatibilidad con guards y código pre-refactor
+  // Legacy keys (compatibilidad con código viejo)
   localStorage.setItem('token', session.token);
-  localStorage.setItem('role', session.rol === 'PROPIETARIO' ? 'ADMIN' : 'USER');
+  let legacyRole = 'USER';
+  if (session.esSuperadmin) legacyRole = 'SUPERADMIN';
+  else if (session.esAdminEmpresa || session.rol === 'PROPIETARIO') legacyRole = 'ADMIN';
+  localStorage.setItem('role', legacyRole);
 }
 
 export function getSession(): UserSession | null {

@@ -1,0 +1,91 @@
+.sa-page { padding: 1.5rem 2rem; max-width: 1200px; margin: 0 auto; }
+.sa-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.sa-header h1 { margin: 0 0 0.25rem; font-size: 1.5rem; color: #0f172a; }
+.sa-sub { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+.sa-btn {
+  padding: 0.55rem 1rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #334155;
+  transition: all .15s;
+}
+.sa-btn:hover { background: #f8fafc; }
+.sa-btn.primary {
+  background: linear-gradient(90deg, #6d28d9, #be185d);
+  color: #fff;
+  border-color: transparent;
+}
+.sa-btn.primary:hover { filter: brightness(1.05); }
+.sa-btn.small { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+.sa-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.sa-alert {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #fecaca;
+}
+
+.sa-form {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.sa-form h2 { margin: 0 0 1rem; font-size: 1.1rem; color: #0f172a; }
+.sa-form .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.sa-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #475569; }
+.sa-form label.full { grid-column: 1 / -1; }
+.sa-form input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.sa-form input:focus { outline: 2px solid #6d28d9; outline-offset: -1px; }
+.sa-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem; }
+
+.sa-loading, .sa-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+  background: #fff;
+  border: 1px dashed #e2e8f0;
+  border-radius: 12px;
+}
+
+.sa-table {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.sa-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 0.7fr 0.7fr 1.2fr 0.7fr;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+.sa-row:last-child { border-bottom: none; }
+.sa-row-head {
+  background: #f8fafc;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sa-row > span { padding-right: 0.5rem; }

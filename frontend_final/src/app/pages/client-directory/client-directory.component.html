@@ -1,158 +1,250 @@
 <nav class="breadcrumb">
   <a routerLink="/app/dashboard">Directory</a>
   <span>/</span>
-  <span class="current">Client Directory</span>
+  <span class="current">Empresas</span>
 </nav>
 
 <header class="page-header">
   <div>
-    <h1>Enterprise Clients</h1>
+    <h1>Empresas registradas</h1>
     <p class="subtitle">
-      Manage organizational units and billing entities within the BPM ecosystem.
+      Crea, edita y desactiva empresas. Cada empresa tiene su propio dominio
+      de correo y un administrador inicial.
     </p>
   </div>
+  <button class="btn btn-dark" (click)="abrirCrear()">+ Nueva empresa</button>
 </header>
 
-<div class="main-grid">
-  <!-- Registration form -->
-  <div class="panel form-panel">
-    <div class="panel-header">
-      <div class="panel-title">Register Client</div>
+<!-- KPI -->
+<div class="kpi-row" *ngIf="!loading && !loadError">
+  <div class="kpi-card">
+    <div class="kpi-label">Total empresas</div>
+    <div class="kpi-value">{{ empresas.length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Usuarios totales</div>
+    <div class="kpi-value">{{ totalUsuariosSum }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Procesos activos</div>
+    <div class="kpi-value">{{ totalProcesosSum }}</div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="filter-bar" *ngIf="!loading && !loadError && empresas.length > 0">
+  <div class="filter-field grow">
+    <label>Buscar</label>
+    <input type="text" [(ngModel)]="filtroTexto" name="ftexto"
+           placeholder="Nombre, NIT, dominio o email…">
+  </div>
+  <div class="filter-field">
+    <label>Estado</label>
+    <select [(ngModel)]="filtroEstado" name="festado">
+      <option value="">Todos</option>
+      <option value="CON_USUARIOS">Con usuarios</option>
+      <option value="SIN_USUARIOS">Sin usuarios</option>
+    </select>
+  </div>
+  <div class="filter-field">
+    <label>Creadas desde</label>
+    <input type="date" [(ngModel)]="filtroDesde" name="fdesde">
+  </div>
+  <div class="filter-field">
+    <label>Hasta</label>
+    <input type="date" [(ngModel)]="filtroHasta" name="fhasta">
+  </div>
+  <div class="filter-field">
+    <label>Ordenar</label>
+    <select [(ngModel)]="ordenarPor" name="forder">
+      <option value="recientes">Más recientes</option>
+      <option value="antiguas">Más antiguas</option>
+      <option value="nombre">Nombre A–Z</option>
+      <option value="usuarios">Más usuarios</option>
+    </select>
+  </div>
+  <button class="btn btn-outline btn-sm filter-clear"
+          *ngIf="hayFiltrosActivos"
+          (click)="limpiarFiltros()">Limpiar</button>
+</div>
+
+<div *ngIf="loading" class="state">Cargando empresas…</div>
+<div *ngIf="!loading && loadError" class="state error">{{ loadError }}</div>
+
+<!-- Cards -->
+<div class="cards-grid" *ngIf="!loading && !loadError && empresasFiltradas.length > 0">
+  <div class="client-card" *ngFor="let e of empresasFiltradas; trackBy: trackById">
+    <div class="card-top">
+      <div class="card-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+      <div class="card-id">
+        <strong>{{ e.nombre }}</strong>
+        <span>NIT: {{ e.nit }}</span>
+      </div>
+      <span class="badge" [class]="'badge ' + status(e).color">● {{ status(e).label }}</span>
     </div>
-    <p class="hint mb-2">Add a new legal entity to the system.</p>
 
-    <form (ngSubmit)="submit()">
-      <div class="form-group">
-        <label>Company Name</label>
-        <input type="text" [(ngModel)]="form.nombreEmpresa" name="nombreEmpresa"
-               placeholder="e.g. Globex Corporation" required />
+    <div class="card-stats">
+      <div>
+        <span class="stat-label">DOMINIO</span>
+        <span class="stat-value">{{ e.dominio || '—' }}</span>
       </div>
-      <div class="form-group">
-        <label>NIT (Tax ID)</label>
-        <input type="text" [(ngModel)]="form.nit" name="nit"
-               placeholder="900.123.456-7" required />
+      <div>
+        <span class="stat-label">USUARIOS</span>
+        <span class="stat-value">{{ e.totalUsuarios }}</span>
       </div>
-      <div class="form-group">
-        <label>Contact Email</label>
-        <input type="email" [(ngModel)]="form.emailContacto" name="emailContacto"
-               placeholder="operations@company.com" />
+      <div>
+        <span class="stat-label">POOLS</span>
+        <span class="stat-value">{{ e.totalPools }}</span>
       </div>
-      <div class="form-group">
-        <label>Admin Email</label>
-        <input type="email" [(ngModel)]="form.emailAdmin" name="emailAdmin"
-               placeholder="admin@company.com" required />
-      </div>
-      <div class="form-group">
-        <label>Admin Password</label>
-        <div class="password-field">
-          <input [type]="showPassword ? 'text' : 'password'"
-                 [(ngModel)]="form.password" name="password"
-                 placeholder="Min 8 characters" required />
-          <button type="button" class="password-toggle"
-                  (click)="showPassword = !showPassword"
-                  [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-            <app-icon [name]="showPassword ? 'eye-off' : 'eye'"></app-icon>
+    </div>
+
+    <div class="card-foot">
+      <span>Creada: {{ e.createdAt | date:'mediumDate' }}</span>
+      <div class="card-actions">
+        <ng-container *ngIf="esLuloOwner(e); else accionesNormales">
+          <span class="locked-tag" title="Empresa propietaria de la app: protegida">
+            🔒 Empresa propietaria
+          </span>
+          <button class="btn btn-outline btn-sm" disabled title="Protegida — sin acciones">
+            Detalle
           </button>
-        </div>
+        </ng-container>
+        <ng-template #accionesNormales>
+          <button class="btn btn-outline btn-sm" (click)="abrirEditar(e)">Editar</button>
+          <button class="btn btn-outline btn-sm" (click)="open(e.id)">Detalle</button>
+          <button class="btn btn-danger btn-sm" (click)="abrirEliminar(e)">Eliminar</button>
+        </ng-template>
       </div>
+    </div>
+  </div>
+</div>
 
-      <button type="submit" class="btn btn-dark w-full" [disabled]="saving">
-        {{ saving ? 'Registering…' : 'Register Client' }}
-      </button>
+<div *ngIf="!loading && !loadError && empresas.length === 0" class="state">
+  Aún no hay empresas. Crea la primera con el botón "Nueva empresa".
+</div>
+<div *ngIf="!loading && !loadError && empresas.length > 0 && empresasFiltradas.length === 0" class="state">
+  Ninguna empresa coincide con los filtros aplicados.
+</div>
 
-      <p *ngIf="saveError" class="hint mt-1" style="color: var(--color-error, red)">{{ saveError }}</p>
-      <p *ngIf="saveSuccess" class="hint mt-1" style="color: var(--color-success, green)">{{ saveSuccess }}</p>
+<!-- ────────────────── MODAL CREAR ────────────────── -->
+<div class="modal-overlay" *ngIf="modal === 'crear'" (click)="cerrarModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <h2>Nueva empresa</h2>
+    <p class="hint">Define la empresa, su dominio de correo y su admin inicial.</p>
 
-      <p class="hint mt-2">
-        Entity will be created in <strong>active</strong> status with default pool &amp; admin role.
-      </p>
+    <form (ngSubmit)="submitCrear()">
+      <div class="form-row">
+        <label>
+          <span>Nombre empresa *</span>
+          <input type="text" [(ngModel)]="formCrear.nombreEmpresa" name="nombreEmpresa" required>
+        </label>
+        <label>
+          <span>NIT *</span>
+          <input type="text" [(ngModel)]="formCrear.nit" name="nit" required>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>
+          <span>Dominio email * <small>(ej. acme.com)</small></span>
+          <input type="text" [(ngModel)]="formCrear.dominio" name="dominio"
+                 (blur)="sugerirEmail()" placeholder="acme.com" required>
+        </label>
+        <label>
+          <span>Email contacto</span>
+          <input type="email" [(ngModel)]="formCrear.emailContacto" name="emailContacto">
+        </label>
+      </div>
+      <label class="full">
+        <span>Email del admin * <small>debe terminar en &#64;{{ formCrear.dominio || 'dominio' }}</small></span>
+        <input type="email" [(ngModel)]="formCrear.emailAdmin" name="emailAdmin" required>
+      </label>
+      <label class="full">
+        <span>Password admin * <small>min 8</small></span>
+        <input [type]="showPassword ? 'text' : 'password'"
+               [(ngModel)]="formCrear.password" name="password" minlength="8" required>
+      </label>
+
+      <p *ngIf="error" class="msg-error">{{ error }}</p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="cerrarModal()" [disabled]="busy">Cancelar</button>
+        <button type="submit" class="btn btn-dark" [disabled]="busy">
+          {{ busy ? 'Creando…' : 'Crear empresa' }}
+        </button>
+      </div>
     </form>
   </div>
+</div>
 
-  <!-- Directory panel -->
-  <div class="directory-col">
+<!-- ────────────────── MODAL EDITAR ────────────────── -->
+<div class="modal-overlay" *ngIf="modal === 'editar' && modalEmpresa" (click)="cerrarModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <h2>Editar {{ modalEmpresa.nombre }}</h2>
+    <p class="hint">Actualiza la información de la empresa o reemplaza al admin.</p>
 
-    <!-- KPI strip -->
-    <div class="kpi-row" *ngIf="!loading && !loadError">
-      <div class="kpi-card">
-        <div class="kpi-label">Total Entities</div>
-        <div class="kpi-value">{{ empresas.length }}</div>
-        <div class="kpi-trend">↑ Live</div>
+    <form (ngSubmit)="submitEditar()">
+      <div class="form-row">
+        <label>
+          <span>Nombre empresa</span>
+          <input type="text" [(ngModel)]="formEditar.nombreEmpresa" name="enombre">
+        </label>
+        <label>
+          <span>Dominio</span>
+          <input type="text" [(ngModel)]="formEditar.dominio" name="edominio">
+        </label>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Active Users</div>
-        <div class="kpi-value">{{ totalUsuariosSum }}</div>
+      <label class="full">
+        <span>Email contacto</span>
+        <input type="email" [(ngModel)]="formEditar.emailContacto" name="eemailContacto">
+      </label>
+
+      <hr class="sep">
+      <h3>Cambiar / reasignar admin</h3>
+      <p class="hint">Si dejas vacío, no se modifica el admin actual.</p>
+      <label class="full">
+        <span>Nuevo email admin <small>debe terminar en &#64;{{ formEditar.dominio || modalEmpresa.dominio || 'dominio' }}</small></span>
+        <input type="email" [(ngModel)]="formEditar.nuevoEmailAdmin" name="enuevoAdmin">
+      </label>
+      <label class="full">
+        <span>Nuevo password admin <small>opcional, min 6</small></span>
+        <input type="password" [(ngModel)]="formEditar.nuevoPasswordAdmin" name="enuevoPass" minlength="6">
+      </label>
+
+      <p *ngIf="error" class="msg-error">{{ error }}</p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="cerrarModal()" [disabled]="busy">Cancelar</button>
+        <button type="submit" class="btn btn-dark" [disabled]="busy">
+          {{ busy ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Running Processes</div>
-        <div class="kpi-value">{{ totalProcesosSum }}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Portfolio Health</div>
-        <div class="kpi-value">99.8%</div>
-        <div class="kpi-trend">○ Stable</div>
-      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ────────────────── MODAL ELIMINAR ────────────────── -->
+<div class="modal-overlay" *ngIf="modal === 'eliminar' && modalEmpresa" (click)="cerrarModal()">
+  <div class="modal-box danger-box" (click)="$event.stopPropagation()">
+    <h2>Eliminar empresa</h2>
+    <p>
+      Vas a desactivar <strong>{{ modalEmpresa.nombre }}</strong>. Los usuarios
+      quedarán suspendidos. Los datos no se borran físicamente (soft delete).
+    </p>
+    <p>Para confirmar, escribe el nombre exacto de la empresa:</p>
+    <div class="confirm-box">
+      <span class="confirm-target">{{ modalEmpresa.nombre }}</span>
+      <input type="text" [(ngModel)]="confirmTextoBorrar" name="confirmText"
+             [placeholder]="modalEmpresa.nombre" autocomplete="off">
     </div>
 
-    <!-- Loading / Error -->
-    <ng-container *ngIf="loading">
-      <div class="state">Loading clients…</div>
-    </ng-container>
-    <ng-container *ngIf="!loading && loadError">
-      <div class="state error">{{ loadError }}</div>
-    </ng-container>
+    <p *ngIf="error" class="msg-error">{{ error }}</p>
 
-    <!-- Cards grid -->
-    <div class="cards-grid" *ngIf="!loading && !loadError && empresas.length > 0">
-      <div
-        *ngFor="let e of empresas"
-        class="client-card"
-        (click)="open(e.id)"
-        role="button"
-        tabindex="0"
-      >
-        <div class="card-top">
-          <div class="card-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
-          <div class="card-id">
-            <strong>{{ e.nombre }}</strong>
-            <span>NIT: {{ e.nit }}</span>
-          </div>
-          <span class="badge" [class]="'badge ' + tier(e).color">{{ tier(e).label }}</span>
-        </div>
-
-        <div class="card-stats">
-          <div>
-            <span class="stat-label">USERS</span>
-            <span class="stat-value">{{ e.totalUsuarios }}</span>
-          </div>
-          <div>
-            <span class="stat-label">POOLS</span>
-            <span class="stat-value">{{ e.totalPools }}</span>
-          </div>
-          <div>
-            <span class="stat-label">STATUS</span>
-            <span class="stat-value">
-              <span class="badge" [class]="'badge ' + status(e).color">
-                ● {{ status(e).label }}
-              </span>
-            </span>
-          </div>
-        </div>
-
-        <div class="card-foot">
-          <span>Created: {{ e.createdAt | date:'mediumDate' }}</span>
-          <a (click)="$event.stopPropagation(); open(e.id)" class="manage-link">MANAGE CONTEXT →</a>
-        </div>
-      </div>
-    </div>
-
-    <div *ngIf="!loading && !loadError && empresas.length === 0" class="state">
-      No hay empresas registradas todavía.
-    </div>
-
-    <div class="dir-footer" *ngIf="!loading && empresas.length > 0">
-      <button class="btn btn-outline btn-sm" (click)="refresh()">Refresh</button>
-      <span class="hint">Showing {{ empresas.length }} client{{ empresas.length === 1 ? '' : 's' }}</span>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" (click)="cerrarModal()" [disabled]="busy">Cancelar</button>
+      <button type="button" class="btn btn-danger" (click)="submitEliminar()"
+              [disabled]="busy || confirmTextoBorrar !== modalEmpresa.nombre">
+        {{ busy ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
     </div>
   </div>
 </div>

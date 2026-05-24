@@ -416,3 +416,116 @@
   padding: 0.75rem 1.25rem 1rem;
   border-top: 1px solid var(--color-border, #e5e7eb);
 }
+
+/* ── Role Pool & Matrix overview ─────────────────────────────────── */
+.rp-overview {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.rp-overview-head h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  color: #0f172a;
+}
+.rp-overview-head p {
+  margin: 0 0 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.rp-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.rp-tier-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #f8fafc;
+  border-left-width: 4px;
+}
+.rp-tier-card.tier-full  { border-left-color: #dc2626; background: #fef2f2; }
+.rp-tier-card.tier-write { border-left-color: #2563eb; background: #eff6ff; }
+.rp-tier-card.tier-read  { border-left-color: #16a34a; background: #f0fdf4; }
+
+.rp-tier-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+.rp-tier-card.tier-full .rp-tier-label  { color: #b91c1c; }
+.rp-tier-card.tier-write .rp-tier-label { color: #1d4ed8; }
+.rp-tier-card.tier-read .rp-tier-label  { color: #15803d; }
+
+.rp-tier-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0.25rem 0;
+}
+.rp-tier-desc {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}
+.rp-tier-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.rp-perm-chip {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.7rem;
+  background: rgba(15,23,42,0.05);
+  color: #334155;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+.rp-perm-more {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  align-self: center;
+}
+
+.rp-matrix-wrap h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+.rp-matrix table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.rp-matrix th,
+.rp-matrix td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.rp-matrix th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rp-matrix .rp-mod-name {
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+}
+.rp-matrix .rp-yes { color: #16a34a; font-weight: 700; }
+.rp-matrix .rp-no  { color: #cbd5e1; }

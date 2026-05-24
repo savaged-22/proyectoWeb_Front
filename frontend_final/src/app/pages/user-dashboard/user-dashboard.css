@@ -63,3 +63,165 @@
 }
 
 .w-full { width: 100%; }
+
+/* ── Dashboard Lulo ─────────────────────────────────────────────── */
+.lulo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.lulo-header h1 {
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+}
+
+.lulo-kpi {
+  margin-bottom: 2rem;
+}
+.kpi-card.kpi-purple {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+.kpi-card.kpi-purple .kpi-value { color: #0f172a; }
+.kpi-card.kpi-purple .kpi-label { color: #64748b; }
+.kpi-card.kpi-purple .kpi-trend { color: #94a3b8; }
+
+.lulo-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 900px) {
+  .lulo-grid { grid-template-columns: 1fr; }
+}
+
+.lulo-empresas {
+  display: flex;
+  flex-direction: column;
+}
+.lulo-empresa-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.lulo-empresa-row:last-child { border-bottom: none; }
+.lulo-empresa-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0052cc, #2563eb);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+.lulo-empresa-info strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+.lulo-empresa-info span {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.lulo-empresa-stats {
+  display: flex;
+  gap: 0.85rem;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.lulo-quick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+.lulo-quick-card {
+  position: relative;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  min-height: 96px;
+  overflow: hidden;
+}
+.lulo-quick-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0052cc, #2563eb);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.lulo-quick-card .lq-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1d4ed8;
+  font-size: 1.05rem;
+  transition: all 0.2s;
+}
+.lulo-quick-card .lq-text strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+.lulo-quick-card .lq-text span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+.lulo-quick-card .lq-arrow {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.85rem;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  transition: all 0.2s;
+}
+.lulo-quick-card:hover {
+  border-color: #2563eb;
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.25);
+}
+.lulo-quick-card:hover::before { opacity: 1; }
+.lulo-quick-card:hover .lq-icon {
+  background: linear-gradient(135deg, #0052cc, #2563eb);
+  color: #fff;
+}
+.lulo-quick-card:hover .lq-arrow {
+  color: #2563eb;
+  transform: translateX(3px);
+}
+
+/* Quitar subrayado de links accionables del dashboard Lulo */
+.lulo-header .btn,
+.lulo-grid .panel-header a,
+.lulo-grid a.hint,
+.lulo-empresa-row a.btn,
+.lulo-empresa-row .btn {
+  text-decoration: none;
+}

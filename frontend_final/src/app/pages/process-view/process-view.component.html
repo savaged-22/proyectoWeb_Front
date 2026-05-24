@@ -1,0 +1,15 @@
+<section class="pv-page">
+  <header class="pv-page-head">
+    <button class="pv-back" (click)="volver()">← Volver</button>
+    <h1>Visor de proceso</h1>
+    <button class="pv-edit" *ngIf="puedeEditar()" (click)="irAEditar()">
+      Editar diagrama
+    </button>
+  </header>
+
+  <app-process-viewer
+    *ngIf="procesoId"
+    [procesoId]="procesoId"
+    height="calc(100vh - 160px)">
+  </app-process-viewer>
+</section>

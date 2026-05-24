@@ -30,6 +30,7 @@ export class PermissionsComponent implements OnInit {
 
   loading = true;
   error = '';
+  loadingStuck = false;
 
   showModal = false;
   modalNombre = '';
@@ -39,6 +40,24 @@ export class PermissionsComponent implements OnInit {
   modalError = '';
 
   ngOnInit(): void {
+    this.cargar();
+    setTimeout(() => {
+      if (this.loading) this.loadingStuck = true;
+    }, 4000);
+    // Auto-refresh roles cuando crear/editar emite el evento global.
+    this.rolPoolService.rolesChanged$.subscribe((poolId) => {
+      if (this.selectedPool?.id === poolId) {
+        this.rolPoolService.listar(poolId).subscribe({
+          next: (rs) => { this.roles = rs; },
+        });
+      }
+    });
+  }
+
+  cargar(): void {
+    this.loading = true;
+    this.loadingStuck = false;
+    this.error = '';
     this.poolService.listar().subscribe({
       next: (pools) => {
         this.pools = pools;
@@ -90,7 +109,11 @@ export class PermissionsComponent implements OnInit {
 
   // ── Gating por permiso ──────────────────────────────────────────────────
   get puedeCrearRol(): boolean {
-    return this.auth.can('ROL_CREAR');
+    return this.auth.can('ROL_CREAR') || this.auth.can('LULO_ROL_GESTIONAR');
+  }
+
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
   }
 
   get puedeEditarRol(): boolean {
@@ -134,6 +157,70 @@ export class PermissionsComponent implements OnInit {
     return this.roles.filter((r) => !r.esPropietario).length;
   }
 
+  // ── Vista "Role Pool & Matrix" ─────────────────────────────────────────
+  /**
+   * Niveles tipo "Full / Write / Read" inferidos de los roles del pool.
+   * SUPERADMIN ve todos, ADMIN_EMPRESA ve los de sus pools, USUARIO ve solo
+   * su rol asignado.
+   */
+  get rolesVisibles(): RolPool[] {
+    const session = this.auth.getSession();
+    if (!session) return [];
+    if (session.esSuperadmin || session.esAdminEmpresa) return this.roles;
+    // Usuario regular: solo ve roles con todos los permisos que él tiene.
+    return this.roles.filter((r) =>
+      r.permisos.every((p) => session.permisos?.includes(p.codigo)),
+    );
+  }
+
+  /** Tier (nivel) según cobertura de permisos: full=todos, write=mitad+, read=resto. */
+  tierOf(rol: RolPool): { label: string; klass: string; descripcion: string } {
+    if (rol.esPropietario) {
+      return {
+        label: 'FULL ACCESS',
+        klass: 'tier-full',
+        descripcion: 'Autoridad completa sobre el pool: usuarios, roles, procesos y auditoría.',
+      };
+    }
+    const cobertura = this.catalogoPermisos.length > 0
+      ? rol.permisos.length / this.catalogoPermisos.length
+      : 0;
+    if (cobertura >= 0.5) {
+      return {
+        label: 'WRITE ACCESS',
+        klass: 'tier-write',
+        descripcion: 'Puede crear y modificar flujos del negocio, pero no gestiona usuarios.',
+      };
+    }
+    return {
+      label: 'READ ONLY',
+      klass: 'tier-read',
+      descripcion: 'Solo consulta procesos y métricas; sin permisos de edición.',
+    };
+  }
+
+  /**
+   * Matriz Módulo × Rol. Cada celda indica si el rol tiene al menos un
+   * permiso del módulo. Útil para una vista comparativa rápida.
+   */
+  readonly modulosMatriz: { label: string; prefijo: string }[] = [
+    { label: 'Gestión de usuarios',  prefijo: 'USUARIO' },
+    { label: 'Procesos y workflows', prefijo: 'PROCESO' },
+    { label: 'Diagramas',            prefijo: 'DIAGRAMA' },
+    { label: 'Roles y permisos',     prefijo: 'ROL' },
+    { label: 'Pools',                prefijo: 'POOL' },
+    { label: 'Auditoría',            prefijo: 'AUDIT' },
+  ];
+
+  rolTienePrefijo(rol: RolPool, prefijo: string): boolean {
+    return rol.permisos.some((p) => p.codigo.startsWith(prefijo + '_'));
+  }
+
+  /** Total visible para mostrar en KPI de overview. */
+  get totalRolesVisibles(): number {
+    return this.rolesVisibles.length;
+  }
+
   abrirModal(): void {
     this.showModal = true;
     this.modalNombre = '';
@@ -152,47 +239,129 @@ export class PermissionsComponent implements OnInit {
       : this.modalPermisos.add(codigo);
   }
 
-  // ── Catálogo de permisos agrupado para el modal ─────────────────────────
-  private static readonly GRUPOS: { prefijo: string; label: string; icono: string }[] = [
-    { prefijo: 'PROCESO',  label: 'Procesos', icono: 'procesos' },
-    { prefijo: 'DIAGRAMA', label: 'Diagrama', icono: 'diagrama' },
-    { prefijo: 'ROL',      label: 'Roles',    icono: 'roles' },
-    { prefijo: 'USUARIO',  label: 'Usuarios', icono: 'usuarios' },
+  // ── Catálogo de permisos: secciones profesionales ─────────────────────
+  /**
+   * Cada sección agrupa permisos relacionados. La página muestra solo las
+   * secciones cuyos permisos están realmente disponibles para el pool actual
+   * (los pools de Lulo no exponen permisos operacionales, y viceversa).
+   */
+  private static readonly SECCIONES: {
+    label: string; icono: string; codigos: string[]
+  }[] = [
+    // ── ADMINISTRACIÓN LULO ──────────────────────────────────────────
+    { label: 'Gestión de Empresas', icono: 'cog', codigos: [
+      'EMPRESA_VER', 'EMPRESA_CREAR', 'EMPRESA_EDITAR',
+      'EMPRESA_ELIMINAR', 'EMPRESA_SUSPENDER', 'EMPRESA_REACTIVAR',
+    ]},
+    { label: 'Equipo Lulo', icono: 'usuarios', codigos: [
+      'LULO_USUARIO_VER', 'LULO_USUARIO_CREAR',
+      'LULO_USUARIO_EDITAR', 'LULO_USUARIO_ELIMINAR', 'LULO_ROL_GESTIONAR',
+    ]},
+    { label: 'Observabilidad', icono: 'eye', codigos: [
+      'METRICAS_VER', 'AUDIT_GLOBAL_VER', 'AUDIT_VER',
+    ]},
+    { label: 'Soporte Técnico', icono: 'share', codigos: [
+      'SOPORTE_PROCESOS_VER',
+    ]},
+    // ── OPERACIÓN EMPRESA CLIENTE ────────────────────────────────────
+    { label: 'Procesos', icono: 'procesos', codigos: [
+      'PROCESO_VER', 'PROCESO_CREAR', 'PROCESO_EDITAR',
+      'PROCESO_ELIMINAR', 'PROCESO_PUBLICAR', 'PROCESO_COMPARTIR',
+    ]},
+    { label: 'Diagramas', icono: 'diagrama', codigos: [
+      'DIAGRAMA_VER', 'DIAGRAMA_EDITAR',
+    ]},
+    { label: 'Roles y Permisos', icono: 'roles', codigos: [
+      'ROL_VER', 'ROL_CREAR', 'ROL_EDITAR', 'ROL_ELIMINAR',
+    ]},
+    { label: 'Usuarios de Empresa', icono: 'usuarios', codigos: [
+      'USUARIO_VER', 'USUARIO_INVITAR', 'USUARIO_REVOCAR',
+    ]},
+    { label: 'Pools', icono: 'cog', codigos: [
+      'POOL_ADMINISTRAR',
+    ]},
   ];
 
   private static readonly ICONOS_ACCION: Record<string, string> = {
     VER: 'eye', CREAR: 'plus', EDITAR: 'pencil', ELIMINAR: 'trash',
     PUBLICAR: 'publish', COMPARTIR: 'share', INVITAR: 'mail', REVOCAR: 'ban',
-    ADMINISTRAR: 'cog',
+    ADMINISTRAR: 'cog', SUSPENDER: 'ban', REACTIVAR: 'plus', GESTIONAR: 'cog',
   };
 
-  private static readonly ETIQUETAS_ACCION: Record<string, string> = {
-    VER: 'Ver', CREAR: 'Crear', EDITAR: 'Editar', ELIMINAR: 'Eliminar',
-    PUBLICAR: 'Publicar', COMPARTIR: 'Compartir', INVITAR: 'Invitar',
-    REVOCAR: 'Revocar', ADMINISTRAR: 'Administrar',
+  /** Etiquetas profesionales por código completo. */
+  private static readonly ETIQUETAS_COMPLETAS: Record<string, string> = {
+    // Empresas
+    EMPRESA_VER:        'Consultar empresas',
+    EMPRESA_CREAR:      'Crear empresas',
+    EMPRESA_EDITAR:     'Editar empresas',
+    EMPRESA_ELIMINAR:   'Eliminar empresas',
+    EMPRESA_SUSPENDER:  'Suspender empresas',
+    EMPRESA_REACTIVAR:  'Reactivar empresas',
+    // Equipo Lulo
+    LULO_USUARIO_VER:      'Ver usuarios Lulo',
+    LULO_USUARIO_CREAR:    'Crear usuarios Lulo',
+    LULO_USUARIO_EDITAR:   'Editar usuarios Lulo',
+    LULO_USUARIO_ELIMINAR: 'Eliminar usuarios Lulo',
+    LULO_ROL_GESTIONAR:    'Gestionar roles Lulo',
+    // Observabilidad
+    METRICAS_VER:       'Ver métricas globales',
+    AUDIT_GLOBAL_VER:   'Ver auditoría global',
+    AUDIT_VER:          'Ver auditoría de empresa',
+    // Soporte
+    SOPORTE_PROCESOS_VER: 'Inspeccionar procesos cliente',
+    // Procesos
+    PROCESO_VER:        'Consultar procesos',
+    PROCESO_CREAR:      'Crear procesos',
+    PROCESO_EDITAR:     'Editar procesos',
+    PROCESO_ELIMINAR:   'Eliminar procesos',
+    PROCESO_PUBLICAR:   'Publicar procesos',
+    PROCESO_COMPARTIR:  'Compartir procesos',
+    // Diagramas
+    DIAGRAMA_VER:    'Ver diagramas',
+    DIAGRAMA_EDITAR: 'Editar diagramas',
+    // Roles
+    ROL_VER:      'Ver roles',
+    ROL_CREAR:    'Crear roles',
+    ROL_EDITAR:   'Editar roles',
+    ROL_ELIMINAR: 'Eliminar roles',
+    // Usuarios empresa
+    USUARIO_VER:     'Ver usuarios',
+    USUARIO_INVITAR: 'Invitar usuarios',
+    USUARIO_REVOCAR: 'Revocar usuarios',
+    // Pools
+    POOL_ADMINISTRAR: 'Administrar pools',
   };
 
-  /** Agrupa el catálogo por prefijo del código; lo no reconocido va a "Administración". */
+  /** Devuelve solo las secciones con permisos disponibles en el pool actual. */
   get gruposPermiso(): { label: string; icono: string; permisos: Permiso[] }[] {
-    const grupos = PermissionsComponent.GRUPOS.map((g) => ({
-      label: g.label,
-      icono: g.icono,
-      permisos: this.catalogoPermisos.filter((p) => p.codigo.startsWith(g.prefijo + '_')),
-    }));
-    const conocidos = new Set(grupos.flatMap((g) => g.permisos.map((p) => p.codigo)));
-    const otros = this.catalogoPermisos.filter((p) => !conocidos.has(p.codigo));
-    if (otros.length) grupos.push({ label: 'Administración', icono: 'cog', permisos: otros });
-    return grupos.filter((g) => g.permisos.length > 0);
+    const disponibles = new Set(this.catalogoPermisos.map((p) => p.codigo));
+    return PermissionsComponent.SECCIONES
+      .map((s) => ({
+        label: s.label,
+        icono: s.icono,
+        permisos: s.codigos
+          .filter((c) => disponibles.has(c))
+          .map((c) => this.catalogoPermisos.find((p) => p.codigo === c)!)
+          .filter(Boolean),
+      }))
+      .filter((g) => g.permisos.length > 0);
   }
 
   iconoPermiso(codigo: string): string {
-    const accion = codigo.split('_')[1] ?? '';
+    const partes = codigo.split('_');
+    const accion = partes[partes.length - 1] ?? '';
     return PermissionsComponent.ICONOS_ACCION[accion] ?? 'key';
   }
 
   etiquetaPermiso(codigo: string): string {
-    const accion = codigo.split('_')[1] ?? codigo;
-    return PermissionsComponent.ETIQUETAS_ACCION[accion] ?? accion.toLowerCase();
+    const full = PermissionsComponent.ETIQUETAS_COMPLETAS[codigo];
+    if (full) return full;
+    // Fallback: convierte EMPRESA_VER → "Empresa ver"
+    return codigo
+      .toLowerCase()
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
   }
 
   estadoGrupo(permisos: Permiso[]): 'none' | 'some' | 'all' {

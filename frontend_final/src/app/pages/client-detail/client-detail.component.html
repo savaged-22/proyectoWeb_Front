@@ -73,7 +73,9 @@
           class="filter-input"
           name="filterText"
         />
-        <button class="btn btn-primary btn-sm">+ Provision User</button>
+        <a routerLink="/app/users" class="btn btn-primary btn-sm" *ngIf="!isLuloInternal">
+          + Crear usuario
+        </a>
       </div>
     </div>
 
@@ -129,4 +131,51 @@
       <div class="kpi-value" style="color:#fff">45GB</div>
     </div>
   </div>
+
+  <!-- ───────── Procesos cliente (Lulo internos · read-only) ───────── -->
+  <section class="panel" *ngIf="isLuloInternal" style="margin-top: 1.5rem;">
+    <div class="panel-header">
+      <div>
+        <strong>Procesos de {{ e.nombre }}</strong>
+        <span class="readonly-pill">👁 READ ONLY · Soporte</span>
+      </div>
+    </div>
+
+    <div class="state" *ngIf="loadingProcesos">Cargando procesos…</div>
+    <div class="state error" *ngIf="errorProcesos">{{ errorProcesos }}</div>
+
+    <div *ngIf="!loadingProcesos && !errorProcesos && procesos.length === 0" class="state">
+      Esta empresa aún no tiene procesos.
+    </div>
+
+    <table class="proc-table" *ngIf="!loadingProcesos && procesos.length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of procesos">
+          <td><strong>{{ p.nombre }}</strong></td>
+          <td>{{ p.categoria || '—' }}</td>
+          <td>
+            <span class="badge"
+                  [class.green]="(p.estado | uppercase) === 'PUBLICADO'"
+                  [class.amber]="(p.estado | uppercase) === 'BORRADOR'"
+                  [class.gray]="(p.estado | uppercase) === 'ARCHIVADO'">
+              ● {{ p.estado | uppercase }}
+            </span>
+          </td>
+          <td>{{ p.createdAt | date:'mediumDate' }}</td>
+          <td>
+            <a class="btn btn-outline btn-sm" [routerLink]="['/app/process-view', p.id]">Ver</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </ng-container>

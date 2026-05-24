@@ -1,17 +1,28 @@
 <header class="page-header">
-  <div>
-    <h1>Roles & Permissions</h1>
-    <p class="subtitle">Define access control lists (ACL) and manage enterprise role pools.</p>
+  <div *ngIf="isLuloInternal; else headerEmpresa">
+    <h1>Roles de la Consola Lulo</h1>
+    <p class="subtitle">
+      Define perfiles para el equipo Lulo. Cada perfil agrupa permisos administrativos.
+    </p>
   </div>
+  <ng-template #headerEmpresa>
+    <div>
+      <h1>Roles y Permisos</h1>
+      <p class="subtitle">
+        Define los perfiles de acceso de tu empresa. Cada rol agrupa permisos
+        sobre procesos, diagramas, usuarios y configuración del workspace.
+      </p>
+    </div>
+  </ng-template>
   <div class="actions">
     <button *ngIf="puedeCrearRol" class="btn btn-primary" (click)="abrirModal()">
-      + Create Role Pool
+      + Nuevo rol
     </button>
   </div>
 </header>
 
-<!-- Pool selector -->
-<div class="panel mb-2" *ngIf="pools.length > 0">
+<!-- Pool selector: solo si hay >1 pool. Lulo tiene 1 (Lulo Console) -->
+<div class="panel mb-2" *ngIf="pools.length > 1">
   <div class="panel-header">
     <div class="panel-title">Pool</div>
   </div>
@@ -27,7 +38,11 @@
 </div>
 
 <ng-container *ngIf="loading">
-  <div class="state">Loading roles…</div>
+  <div class="state">
+    Cargando roles…
+    <button *ngIf="loadingStuck" class="btn btn-outline btn-sm" style="margin-left:1rem"
+            (click)="cargar()">Reintentar</button>
+  </div>
 </ng-container>
 
 <ng-container *ngIf="!loading && error">
@@ -234,8 +249,8 @@
                   <app-icon [name]="iconoPermiso(p.codigo)"></app-icon>
                 </span>
                 <span class="permiso-card-label">{{ etiquetaPermiso(p.codigo) }}</span>
-                <span class="permiso-card-state">
-                  {{ modalPermisos.has(p.codigo) ? '✓ ON' : 'OFF' }}
+                <span class="permiso-card-state" *ngIf="modalPermisos.has(p.codigo)">
+                  ✓ ON
                 </span>
               </button>
             </div>

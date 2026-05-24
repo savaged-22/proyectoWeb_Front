@@ -1,4 +1,116 @@
-<header class="page-header">
+<!-- ────────── DASHBOARD LULO (superadmin + empresa LULO-APP) ────────── -->
+<ng-container *ngIf="isLuloInternal">
+  <header class="page-header lulo-header">
+    <div>
+      <h1>Consola Lulo</h1>
+      <p class="subtitle">Operación de la plataforma. Gestionas empresas cliente, usuarios internos y métricas globales.</p>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" routerLink="/app/clients">Gestionar empresas</a>
+    </div>
+  </header>
+
+  <div *ngIf="loading || loadingEmpresas" class="state">Cargando consola…</div>
+  <div *ngIf="!loading && error" class="state error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <div class="kpi-grid lulo-kpi">
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-label">Empresas activas</div>
+        <div class="kpi-value">{{ totalEmpresas }}</div>
+        <div class="kpi-trend">↑ clientes en la plataforma</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Usuarios totales</div>
+        <div class="kpi-value">{{ totalUsuariosCliente }}</div>
+        <div class="kpi-trend">Suma de todas las empresas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Procesos en cliente</div>
+        <div class="kpi-value">{{ totalProcesosCliente }}</div>
+        <div class="kpi-trend">Workflows operativos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Estado plataforma</div>
+        <div class="kpi-value">OK</div>
+        <div class="kpi-trend">○ health pass</div>
+      </div>
+    </div>
+
+    <div class="lulo-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <strong>Últimas empresas registradas</strong>
+          <a routerLink="/app/clients" class="hint">Ver todas →</a>
+        </div>
+        <div class="lulo-empresas">
+          <div *ngIf="ultimasEmpresas.length === 0" class="state">Sin empresas todavía.</div>
+          <div class="lulo-empresa-row" *ngFor="let e of ultimasEmpresas">
+            <div class="lulo-empresa-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+            <div class="lulo-empresa-info">
+              <strong>{{ e.nombre }}</strong>
+              <span>{{ e.dominio || '—' }} · NIT {{ e.nit }}</span>
+            </div>
+            <div class="lulo-empresa-stats">
+              <span>{{ e.totalUsuarios }} usuarios</span>
+              <span>{{ e.totalPools }} pools</span>
+            </div>
+            <a [routerLink]="['/app/clients']" class="btn btn-outline btn-sm">Abrir</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><strong>Accesos rápidos</strong></div>
+        <div class="lulo-quick">
+          <a routerLink="/app/clients" class="lulo-quick-card">
+            <span class="lq-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
+            </span>
+            <span class="lq-text">
+              <strong>Empresas</strong>
+              <span>Crear, editar, suspender</span>
+            </span>
+            <span class="lq-arrow">→</span>
+          </a>
+          <a routerLink="/app/users" class="lulo-quick-card">
+            <span class="lq-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
+            <span class="lq-text">
+              <strong>Usuarios Lulo</strong>
+              <span>Equipo interno</span>
+            </span>
+            <span class="lq-arrow">→</span>
+          </a>
+          <a routerLink="/app/permissions" class="lulo-quick-card">
+            <span class="lq-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <span class="lq-text">
+              <strong>Roles Lulo</strong>
+              <span>Permisos granulares</span>
+            </span>
+            <span class="lq-arrow">→</span>
+          </a>
+          <a routerLink="/app/monitoring" class="lulo-quick-card">
+            <span class="lq-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </span>
+            <span class="lq-text">
+              <strong>Auditoría</strong>
+              <span>Eventos &amp; métricas</span>
+            </span>
+            <span class="lq-arrow">→</span>
+          </a>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</ng-container>
+
+<!-- ────────── DASHBOARD EMPRESA CLIENTE ────────── -->
+<header class="page-header" *ngIf="!isLuloInternal">
   <div>
     <h1>Operational Command</h1>
     <p class="subtitle">Real-time infrastructure performance and audit summary.</p>
@@ -9,15 +121,15 @@
   </div>
 </header>
 
-<ng-container *ngIf="loading">
+<ng-container *ngIf="!isLuloInternal && loading">
   <div class="state">Loading dashboard…</div>
 </ng-container>
 
-<ng-container *ngIf="!loading && error">
+<ng-container *ngIf="!isLuloInternal && !loading && error">
   <div class="state error">{{ error }}</div>
 </ng-container>
 
-<ng-container *ngIf="empresa as e">
+<ng-container *ngIf="!isLuloInternal && empresa as e">
   <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi-card">

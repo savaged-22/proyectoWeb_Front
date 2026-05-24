@@ -3,6 +3,7 @@ export interface EmpresaListItem {
   nombre: string;
   nit: string;
   emailContacto: string;
+  dominio: string;
   createdAt: string;
   totalUsuarios: number;
   totalProcesos: number;
@@ -22,6 +23,8 @@ export interface EmpresaDetail {
   nombre: string;
   nit: string;
   emailContacto: string;
+  dominio: string;
+  activo: boolean;
   createdAt: string;
   totalUsuarios: number;
   totalProcesos: number;
@@ -33,6 +36,7 @@ export interface EmpresaDetail {
 export interface RegistroEmpresaRequest {
   nombreEmpresa: string;
   nit: string;
+  dominio: string;
   emailContacto: string;
   emailAdmin: string;
   password: string;
@@ -45,4 +49,13 @@ export interface RegistroEmpresaResponse {
   emailAdmin: string;
   poolDefault: string;
   mensaje: string;
+}
+
+export interface EditarEmpresaRequest {
+  nombreEmpresa?: string;
+  dominio?: string;
+  emailContacto?: string;
+  /** Email nuevo del admin. Si no existe admin se crea, si existe se actualiza. */
+  nuevoEmailAdmin?: string;
+  nuevoPasswordAdmin?: string;
 }

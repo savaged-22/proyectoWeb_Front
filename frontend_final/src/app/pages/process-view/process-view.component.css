@@ -1,0 +1,37 @@
+.pv-page {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.pv-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.pv-page-head h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #0f172a;
+  flex: 1;
+  text-align: center;
+}
+.pv-back, .pv-edit {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.pv-back {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+.pv-back:hover { background: #f8fafc; }
+.pv-edit {
+  background: linear-gradient(90deg, #6d28d9, #be185d);
+  color: #fff;
+  border: none;
+}
+.pv-edit:hover { filter: brightness(1.05); }

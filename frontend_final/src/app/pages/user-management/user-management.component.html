@@ -60,14 +60,22 @@
               </span>
             </td>
             <td>
-              <button
-                *ngIf="puedeGestionarRoles"
-                class="btn btn-outline btn-sm"
-                (click)="abrirEditar(u)"
-              >
-                Edit
-              </button>
-              <span *ngIf="!puedeGestionarRoles" class="hint">—</span>
+              <ng-container *ngIf="puedeGestionarRoles; else sinPermiso">
+                <button
+                  *ngIf="!esSuperadminLulo(u); else lockedEdit"
+                  class="btn btn-outline btn-sm"
+                  (click)="abrirEditar(u)"
+                >
+                  Edit
+                </button>
+                <ng-template #lockedEdit>
+                  <button class="btn btn-outline btn-sm" disabled
+                          title="SUPERADMIN protegido — no editable">
+                    🔒 Edit
+                  </button>
+                </ng-template>
+              </ng-container>
+              <ng-template #sinPermiso><span class="hint">—</span></ng-template>
             </td>
           </tr>
           <tr *ngIf="filteredUsers.length === 0">
@@ -88,8 +96,13 @@
         </p>
 
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" [(ngModel)]="newUserEmail" placeholder="colleague@company.com" />
+          <label>Email Address
+            <small *ngIf="dominioRequerido" style="color:#94a3b8; font-weight:400">
+              · debe terminar en &#64;{{ dominioRequerido }}
+            </small>
+          </label>
+          <input type="email" [(ngModel)]="newUserEmail"
+                 [placeholder]="dominioRequerido ? 'nombre@' + dominioRequerido : 'usuario@company.com'" />
         </div>
         <div class="form-group">
           <label>Password</label>
@@ -124,86 +137,55 @@
     </div>
   </div>
 
-  <!-- Role pool & matrix -->
-  <h3 style="margin: 1.5rem 0 0.75rem 0;">Role Pool & Matrix</h3>
-  <p class="subtitle" style="margin-bottom: 1rem;">
-    Configure access levels for the enterprise directory.
-  </p>
-
-  <div class="role-cards">
-    <div class="panel role-card">
-      <span class="badge blue mb-1">FULL ACCESS</span>
-      <strong>Super Administrator</strong>
-      <p class="subtitle" style="font-size:0.75rem;">
-        Complete authority over user provisioning, system configuration, and data auditing.
+  <!-- ── Role Pool & Matrix dinámicos ───────────────────────────────────── -->
+  <section class="rp-overview" *ngIf="rolesOrdenados.length > 0">
+    <div class="rp-overview-head">
+      <h3>Roles disponibles para asignar</h3>
+      <p>
+        Cada usuario recibe uno de estos roles al crearse. Si creas un nuevo
+        rol en "Roles Lulo" aparecerá automáticamente aquí.
       </p>
-      <div class="perm-tags">
-        <span class="badge gray">user.write</span>
-        <span class="badge gray">sys.config</span>
-        <span class="badge gray">billing.view</span>
-        <span class="badge gray">+12 more</span>
+    </div>
+
+    <div class="rp-tier-grid">
+      <div *ngFor="let r of rolesOrdenados" class="rp-tier-card" [class]="tierOf(r).klass">
+        <div class="rp-tier-label">{{ tierOf(r).label }}</div>
+        <div class="rp-tier-name">{{ r.nombre }}</div>
+        <p class="rp-tier-desc">{{ r.descripcion || 'Rol personalizado del pool' }}</p>
+        <div class="rp-tier-count">
+          {{ r.permisos.length }}
+          {{ r.permisos.length === 1 ? 'permiso' : 'permisos' }}
+        </div>
       </div>
     </div>
 
-    <div class="panel role-card">
-      <span class="badge green mb-1">WRITE ACCESS</span>
-      <strong>Process Editor</strong>
-      <p class="subtitle" style="font-size:0.75rem;">
-        Ability to create and modify business workflows, but cannot manage other users.
-      </p>
-      <div class="perm-tags">
-        <span class="badge gray">flow.edit</span>
-        <span class="badge gray">data.upload</span>
-        <span class="badge gray">report.run</span>
-      </div>
+    <h4 class="rp-matrix-title">Matriz detallada de permisos</h4>
+    <div class="rp-matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>Permiso</th>
+            <th *ngFor="let r of rolesOrdenados">{{ r.nombre }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let grupo of permisosAgrupados">
+            <tr class="rp-group-row">
+              <td [attr.colspan]="rolesOrdenados.length + 1">{{ grupo.label }}</td>
+            </tr>
+            <tr *ngFor="let codigo of grupo.codigos">
+              <td class="rp-perm-name">{{ etiquetaPermiso(codigo) }}</td>
+              <td *ngFor="let r of rolesOrdenados"
+                  [class.rp-yes]="rolTienePermiso(r, codigo)"
+                  [class.rp-no]="!rolTienePermiso(r, codigo)">
+                {{ rolTienePermiso(r, codigo) ? '✓' : '—' }}
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
     </div>
-
-    <div class="panel role-card">
-      <span class="badge gray mb-1">READ ONLY</span>
-      <strong>Stakeholder</strong>
-      <p class="subtitle" style="font-size:0.75rem;">
-        Restricted to monitoring performance metrics and viewing finalized flow documentation.
-      </p>
-      <div class="perm-tags">
-        <span class="badge gray">flow.view</span>
-        <span class="badge gray">dashboard.view</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Permission matrix -->
-  <h3 style="margin: 1.5rem 0 0.75rem 0;">Detailed Permissions Matrix</h3>
-  <div class="panel" style="padding:0">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Module / Permission</th>
-          <th>Admin</th>
-          <th>Editor</th>
-          <th>Viewer</th>
-          <th>API Service</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>User Identity Management</td>
-          <td>✓</td><td>—</td><td>—</td><td>—</td>
-        </tr>
-        <tr>
-          <td>Workflow Execution</td>
-          <td>✓</td><td>✓</td><td>—</td><td>✓</td>
-        </tr>
-        <tr>
-          <td>Data Analytics & Reports</td>
-          <td>✓</td><td>—</td><td>✓</td><td>✓</td>
-        </tr>
-        <tr>
-          <td>Infrastructure Settings</td>
-          <td>✓</td><td>—</td><td>—</td><td>—</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  </section>
 </ng-container>
 
 <!-- Modal: editar usuario (asignar rol) -->

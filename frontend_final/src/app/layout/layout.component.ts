@@ -29,6 +29,30 @@ export class LayoutComponent {
     return this.auth.isPropietario();
   }
 
+  get isSuperadmin(): boolean {
+    return this.auth.isSuperadmin();
+  }
+
+  get isAdminEmpresa(): boolean {
+    return this.auth.isAdminEmpresa();
+  }
+
+  get empresaDisplay(): string {
+    return this.auth.displayEmpresaName();
+  }
+
+  get rolBadge(): string {
+    if (this.isSuperadmin) return 'Dueño App';
+    if (this.isAdminEmpresa) return 'Admin Empresa';
+    if (this.session?.rol === 'PROPIETARIO') return 'Propietario';
+    return 'Colaborador';
+  }
+
+  /** Usuario interno de Lulo (superadmin o empresa LULO-APP). */
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
+  }
+
   /** Iniciales para el avatar a partir del email. */
   get iniciales(): string {
     const email = this.session?.email ?? '';

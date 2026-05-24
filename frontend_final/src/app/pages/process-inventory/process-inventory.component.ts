@@ -26,6 +26,10 @@ export class ProcessInventoryComponent implements OnInit {
   loading = true;
   error = '';
 
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
+  }
+
   filterCategoria = '';
   filterEstado = '';
   searchNombre = '';

@@ -2,9 +2,22 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { EmpresaDetail } from '../../core/models/empresa';
 import { EmpresaService } from '../../services/empresa.service';
+import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
+
+interface ProcesoCliente {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  categoria?: string;
+  estado: string;
+  activo: boolean;
+  createdAt: string;
+}
 
 @Component({
   selector: 'app-client-detail',
@@ -16,11 +29,18 @@ import { EmpresaService } from '../../services/empresa.service';
 export class ClientDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private empresaService = inject(EmpresaService);
+  private auth = inject(AuthService);
+  private http = inject(HttpClient);
 
   empresa?: EmpresaDetail;
   loading = true;
   error = '';
   filterText = '';
+
+  // Procesos cliente (vista solo lectura para Lulo internos)
+  procesos: ProcesoCliente[] = [];
+  loadingProcesos = false;
+  errorProcesos = '';
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -33,6 +53,9 @@ export class ClientDetailComponent implements OnInit {
       next: (data) => {
         this.empresa = data;
         this.loading = false;
+        if (this.isLuloInternal) {
+          this.cargarProcesos(data.id);
+        }
       },
       error: (err) => {
         console.error(err);
@@ -40,6 +63,34 @@ export class ClientDetailComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
+  }
+
+  private cargarProcesos(empresaId: string): void {
+    const session = this.auth.getSession();
+    if (!session) return;
+    this.loadingProcesos = true;
+    this.errorProcesos = '';
+    const params = new HttpParams()
+      .set('empresaId', empresaId)
+      .set('usuarioId', session.usuarioId)
+      .set('size', '50');
+    this.http
+      .get<{ content: ProcesoCliente[] }>(`${environment.apiUrl}/procesos`, { params })
+      .subscribe({
+        next: (page) => {
+          this.procesos = page.content ?? [];
+          this.loadingProcesos = false;
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorProcesos = err?.error?.message || 'No se pudieron cargar los procesos.';
+          this.loadingProcesos = false;
+        },
+      });
   }
 
   get filteredUsuarios() {

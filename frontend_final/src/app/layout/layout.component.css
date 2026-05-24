@@ -260,7 +260,35 @@
   color: #475569;
 }
 .profile-badge.owner { background: #fef3c7; color: #d97706; }
+.profile-badge.admin-empresa { background: #dbeafe; color: #1d4ed8; }
+.profile-badge.superadmin { background: #fce7f3; color: #be185d; }
 .profile-perms { font-size: 0.72rem; color: #94a3b8; }
+
+/* Chip de empresa/rol en la barra superior */
+.empresa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 1.5rem;
+  padding: 0.25rem 0.7rem;
+  background: #f1f5f9;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: #334155;
+  max-width: 280px;
+}
+.empresa-chip.is-superadmin {
+  background: linear-gradient(90deg, #fce7f3, #ede9fe);
+  color: #6d28d9;
+  font-weight: 600;
+}
+.empresa-chip .chip-rol { font-weight: 700; }
+.empresa-chip .chip-sep { color: #94a3b8; }
+.empresa-chip .chip-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* --- MAIN BODY --- */
 .main-body {
@@ -429,4 +457,24 @@ button.menu-item {
 .fab-btn:hover {
   background-color: #0043a6;
   transform: scale(1.05);
+}
+
+/* Separador de sección en sidebar */
+.menu-section {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 0.85rem 1rem 0.35rem;
+  text-transform: uppercase;
+}
+.menu-item.readonly {
+  color: #6d28d9;
+  font-style: italic;
+}
+.menu-item.readonly::after {
+  content: '👁';
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.6;
 }

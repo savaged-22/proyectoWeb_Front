@@ -1,11 +1,18 @@
 <header class="page-header">
   <div>
-    <h1>Procesos</h1>
+    <h1>Procesos
+      <span *ngIf="isLuloInternal" class="readonly-badge">👁 READ ONLY · Soporte</span>
+    </h1>
     <p class="subtitle">
-      Manage and configure operational workflows for the enterprise core.
+      <ng-container *ngIf="!isLuloInternal">
+        Manage and configure operational workflows for the enterprise core.
+      </ng-container>
+      <ng-container *ngIf="isLuloInternal">
+        Vista de soporte: puedes consultar los procesos de los clientes pero no modificarlos.
+      </ng-container>
     </p>
   </div>
-  <div class="actions" style="display: flex; gap: 0.5rem;">
+  <div class="actions" style="display: flex; gap: 0.5rem;" *ngIf="!isLuloInternal">
     <button class="btn btn-outline">Import</button>
     <a routerLink="/app/processes/new" [queryParams]="{isTemplate: true}" class="btn btn-primary" style="background-color: #6366f1; border-color: #6366f1;">+ Create New Design</a>
     <a routerLink="/app/processes/new" class="btn btn-primary">+ Create New Process</a>

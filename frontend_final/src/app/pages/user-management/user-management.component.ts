@@ -100,6 +100,8 @@ export class UserManagementComponent implements OnInit {
     }
     this.loadUsuarios(session.empresaId);
     this.cargarRoles();
+    // Refresca matriz cuando otro componente crea/edita un rol del pool.
+    this.rolPoolService.rolesChanged$.subscribe(() => this.cargarRoles());
   }
 
   private cargarRoles(): void {
@@ -136,11 +138,30 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  /** Dominio email exigido al crear/editar usuarios desde esta vista. */
+  get dominioRequerido(): string {
+    const session = this.auth.getSession();
+    if (!session) return '';
+    if (session.esSuperadmin) return 'lulo.app';
+    // Para admin empresa el dominio viene del backend en empresaDetalle si lo
+    // cargamos; como atajo usamos el sufijo del email del admin actual.
+    const fromEmpresa: any = this.empresa as any;
+    if (fromEmpresa && fromEmpresa.dominio) return fromEmpresa.dominio;
+    const adminMail = session.email || '';
+    return adminMail.includes('@') ? adminMail.split('@')[1] : '';
+  }
+
   createUser(): void {
     const session = this.auth.getSession();
     if (!session || !this.newUserEmail || !this.newUserPassword || !this.newUserRolPoolId) return;
     if (this.newUserPassword.length < 8) {
       this.userStatus = 'La contraseña debe tener al menos 8 caracteres.';
+      this.userStatusError = true;
+      return;
+    }
+    const dom = this.dominioRequerido;
+    if (dom && !this.newUserEmail.toLowerCase().endsWith('@' + dom.toLowerCase())) {
+      this.userStatus = `El correo debe terminar en @${dom}`;
       this.userStatusError = true;
       return;
     }
@@ -207,6 +228,11 @@ export class UserManagementComponent implements OnInit {
     return email ? email.charAt(0).toUpperCase() : '?';
   }
 
+  /** El SUPERADMIN dueño de la app no se puede editar desde esta vista. */
+  esSuperadminLulo(u: UsuarioBasico): boolean {
+    return (u.email || '').toLowerCase() === 'admin@lulo.app';
+  }
+
   badgeForEstado(estado: string): string {
     const m: Record<string, string> = {
       activo: 'green',
@@ -215,5 +241,115 @@ export class UserManagementComponent implements OnInit {
       inactivo: 'gray',
     };
     return m[(estado || '').toLowerCase()] ?? 'blue';
+  }
+
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
+  }
+
+  /**
+   * Roles del pool, ordenados con el propietario (SuperAdmin) primero
+   * y el resto por nombre. Usado en la matriz inferior.
+   */
+  get rolesOrdenados(): RolPool[] {
+    return [...this.roles].sort((a, b) => {
+      if (a.esPropietario && !b.esPropietario) return -1;
+      if (!a.esPropietario && b.esPropietario) return 1;
+      return (a.nombre || '').localeCompare(b.nombre || '');
+    });
+  }
+
+  /**
+   * Permisos a mostrar en la matriz agrupados por sección.
+   * Solo aparecen los permisos que al menos un rol visible tiene.
+   */
+  private static readonly GRUPOS_MATRIZ: { label: string; codigos: string[] }[] = [
+    { label: 'Empresas', codigos: [
+      'EMPRESA_VER', 'EMPRESA_CREAR', 'EMPRESA_EDITAR',
+      'EMPRESA_ELIMINAR', 'EMPRESA_SUSPENDER', 'EMPRESA_REACTIVAR',
+    ]},
+    { label: 'Usuarios Lulo', codigos: [
+      'LULO_USUARIO_VER', 'LULO_USUARIO_CREAR',
+      'LULO_USUARIO_EDITAR', 'LULO_USUARIO_ELIMINAR',
+    ]},
+    { label: 'Roles Lulo', codigos: ['LULO_ROL_GESTIONAR'] },
+    { label: 'Auditoría y Métricas', codigos: [
+      'AUDIT_GLOBAL_VER', 'AUDIT_VER', 'METRICAS_VER',
+    ]},
+    { label: 'Soporte', codigos: ['SOPORTE_PROCESOS_VER'] },
+    { label: 'Procesos', codigos: [
+      'PROCESO_VER', 'PROCESO_CREAR', 'PROCESO_EDITAR',
+      'PROCESO_ELIMINAR', 'PROCESO_PUBLICAR', 'PROCESO_COMPARTIR',
+    ]},
+    { label: 'Diagramas', codigos: ['DIAGRAMA_VER', 'DIAGRAMA_EDITAR'] },
+    { label: 'Roles de Empresa', codigos: [
+      'ROL_VER', 'ROL_CREAR', 'ROL_EDITAR', 'ROL_ELIMINAR',
+    ]},
+    { label: 'Usuarios de Empresa', codigos: [
+      'USUARIO_VER', 'USUARIO_INVITAR', 'USUARIO_REVOCAR',
+    ]},
+    { label: 'Pools', codigos: ['POOL_ADMINISTRAR'] },
+  ];
+
+  private static readonly ETIQUETAS_PERMISO: Record<string, string> = {
+    EMPRESA_VER: 'Consultar empresas',
+    EMPRESA_CREAR: 'Crear empresas',
+    EMPRESA_EDITAR: 'Editar empresas',
+    EMPRESA_ELIMINAR: 'Eliminar empresas',
+    EMPRESA_SUSPENDER: 'Suspender empresas',
+    EMPRESA_REACTIVAR: 'Reactivar empresas',
+    LULO_USUARIO_VER: 'Ver usuarios Lulo',
+    LULO_USUARIO_CREAR: 'Crear usuarios Lulo',
+    LULO_USUARIO_EDITAR: 'Editar usuarios Lulo',
+    LULO_USUARIO_ELIMINAR: 'Eliminar usuarios Lulo',
+    LULO_ROL_GESTIONAR: 'Gestionar roles Lulo',
+    AUDIT_GLOBAL_VER: 'Auditoría global',
+    AUDIT_VER: 'Auditoría de empresa',
+    METRICAS_VER: 'Métricas globales',
+    SOPORTE_PROCESOS_VER: 'Inspeccionar procesos cliente',
+    PROCESO_VER: 'Consultar procesos',
+    PROCESO_CREAR: 'Crear procesos',
+    PROCESO_EDITAR: 'Editar procesos',
+    PROCESO_ELIMINAR: 'Eliminar procesos',
+    PROCESO_PUBLICAR: 'Publicar procesos',
+    PROCESO_COMPARTIR: 'Compartir procesos',
+    DIAGRAMA_VER: 'Ver diagramas',
+    DIAGRAMA_EDITAR: 'Editar diagramas',
+    ROL_VER: 'Ver roles',
+    ROL_CREAR: 'Crear roles',
+    ROL_EDITAR: 'Editar roles',
+    ROL_ELIMINAR: 'Eliminar roles',
+    USUARIO_VER: 'Ver usuarios',
+    USUARIO_INVITAR: 'Invitar usuarios',
+    USUARIO_REVOCAR: 'Revocar usuarios',
+    POOL_ADMINISTRAR: 'Administrar pools',
+  };
+
+  /** Grupos visibles: solo los que tienen al menos un permiso en algún rol. */
+  get permisosAgrupados(): { label: string; codigos: string[] }[] {
+    const todosLosCodigos = new Set<string>();
+    this.rolesOrdenados.forEach(r => r.permisos.forEach(p => todosLosCodigos.add(p.codigo)));
+    return UserManagementComponent.GRUPOS_MATRIZ
+      .map(g => ({
+        label: g.label,
+        codigos: g.codigos.filter(c => todosLosCodigos.has(c)),
+      }))
+      .filter(g => g.codigos.length > 0);
+  }
+
+  rolTienePermiso(rol: RolPool, codigo: string): boolean {
+    return rol.permisos.some(p => p.codigo === codigo);
+  }
+
+  etiquetaPermiso(codigo: string): string {
+    return UserManagementComponent.ETIQUETAS_PERMISO[codigo] ?? codigo;
+  }
+
+  /** Tier visual para cada rol según cobertura de permisos. */
+  tierOf(rol: RolPool): { label: string; klass: string } {
+    if (rol.esPropietario) return { label: 'FULL ACCESS', klass: 'tier-full' };
+    const cobertura = rol.permisos.length;
+    if (cobertura >= 5) return { label: 'WRITE ACCESS', klass: 'tier-write' };
+    return { label: 'READ ONLY', klass: 'tier-read' };
   }
 }
