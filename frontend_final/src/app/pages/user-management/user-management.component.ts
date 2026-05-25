@@ -62,6 +62,14 @@ export class UserManagementComponent implements OnInit {
         || this.auth.can('LULO_USUARIO_CREAR');
   }
 
+  /** Permiso específico de creación: controla la caja "Create user". */
+  get puedeCrearUsuarios(): boolean {
+    return this.auth.isSuperadmin()
+        || this.auth.isAdminEmpresa()
+        || this.auth.can('LULO_USUARIO_CREAR')
+        || this.auth.can('USUARIO_INVITAR');
+  }
+
   abrirEditar(u: UsuarioBasico): void {
     this.editUser = u;
     this.editRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';

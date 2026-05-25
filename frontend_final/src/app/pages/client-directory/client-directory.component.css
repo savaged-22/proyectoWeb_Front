@@ -458,6 +458,13 @@
   font-weight: 600;
   text-decoration: none;
 }
+.btn.btn-primary-blue:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  filter: none;
+  box-shadow: none;
+}
 .btn.btn-primary-blue:hover:not(:disabled) {
   filter: brightness(1.05);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);

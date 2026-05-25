@@ -9,6 +9,7 @@ import {
   RegistroEmpresaRequest,
 } from '../../core/models/empresa';
 import { SuperadminService } from '../../services/superadmin.service';
+import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon.component';
 import { descargarCsv, timestampFileSafe } from '../../core/csv-export';
 
@@ -24,6 +25,11 @@ type ModalMode = null | 'crear' | 'editar' | 'eliminar';
 export class ClientDirectoryComponent implements OnInit {
   private superadmin = inject(SuperadminService);
   private router = inject(Router);
+  private auth = inject(AuthService);
+
+  get puedeCrear(): boolean { return this.auth.isSuperadmin() || this.auth.can('EMPRESA_CREAR'); }
+  get puedeEditar(): boolean { return this.auth.isSuperadmin() || this.auth.can('EMPRESA_EDITAR'); }
+  get puedeEliminar(): boolean { return this.auth.isSuperadmin() || this.auth.can('EMPRESA_ELIMINAR'); }
 
   empresas: EmpresaListItem[] = [];
   loading = true;

@@ -1,16 +1,14 @@
 <header class="page-header">
   <div>
-    <h1>Registered companies</h1>
-    <p class="subtitle">
-      Create, edit and deactivate companies. Each company has its own email
-      domain and an initial administrator.
-    </p>
+    <h1>Companies</h1>
   </div>
   <div style="display:flex; gap:0.5rem;">
     <button class="btn btn-outline"
             [disabled]="empresasFiltradas.length === 0"
             (click)="exportarEmpresasCsv()">Export CSV</button>
-    <button class="btn btn-primary-blue" (click)="abrirCrear()">+ New company</button>
+    <button *ngIf="puedeCrear"
+            class="btn btn-primary-blue"
+            (click)="abrirCrear()">+ New company</button>
   </div>
 </header>
 
@@ -106,9 +104,13 @@
           </button>
         </ng-container>
         <ng-template #accionesNormales>
-          <button class="btn btn-outline btn-sm" (click)="abrirEditar(e)">Edit</button>
+          <button *ngIf="puedeEditar"
+                  class="btn btn-outline btn-sm"
+                  (click)="abrirEditar(e)">Edit</button>
           <button class="btn btn-outline btn-sm" (click)="open(e.id)">Details</button>
-          <button class="btn btn-danger btn-sm" (click)="abrirEliminar(e)">Delete</button>
+          <button *ngIf="puedeEliminar"
+                  class="btn btn-danger btn-sm"
+                  (click)="abrirEliminar(e)">Delete</button>
         </ng-template>
       </div>
     </div>

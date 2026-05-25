@@ -1,17 +1,10 @@
 <header class="page-header">
   <div *ngIf="isLuloInternal; else headerEmpresa">
-    <h1>Lulo Console roles</h1>
-    <p class="subtitle">
-      Define profiles for the Lulo team. Each profile groups administrative permissions.
-    </p>
+    <h1>Roles</h1>
   </div>
   <ng-template #headerEmpresa>
     <div>
       <h1>Roles &amp; Permissions</h1>
-      <p class="subtitle">
-        Define access profiles for your company. Each role groups permissions
-        over processes, diagrams, users and workspace configuration.
-      </p>
     </div>
   </ng-template>
   <div class="actions">

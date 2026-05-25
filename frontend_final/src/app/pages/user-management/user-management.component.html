@@ -1,7 +1,6 @@
 <header class="page-header">
   <div>
-    <h1>Access control &amp; identities</h1>
-    <p class="subtitle">Manage users, define granular roles and audit permissions.</p>
+    <h1>Users</h1>
   </div>
   <div class="actions">
     <button class="btn btn-outline"
@@ -95,7 +94,7 @@
     </div>
 
     <!-- Right: Create user -->
-    <div>
+    <div *ngIf="puedeCrearUsuarios">
       <div class="panel invite-card">
         <strong>Create user</strong>
         <p class="subtitle" style="font-size:0.8rem; margin: 0.25rem 0 1rem 0;">
