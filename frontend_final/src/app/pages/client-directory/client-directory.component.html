@@ -12,7 +12,7 @@
       de correo y un administrador inicial.
     </p>
   </div>
-  <button class="btn btn-dark" (click)="abrirCrear()">+ Nueva empresa</button>
+  <button class="btn btn-primary-blue" (click)="abrirCrear()">+ Nueva empresa</button>
 </header>
 
 <!-- KPI -->
@@ -168,7 +168,7 @@
 
       <div class="modal-actions">
         <button type="button" class="btn btn-outline" (click)="cerrarModal()" [disabled]="busy">Cancelar</button>
-        <button type="submit" class="btn btn-dark" [disabled]="busy">
+        <button type="submit" class="btn btn-primary-blue" [disabled]="busy">
           {{ busy ? 'Creando…' : 'Crear empresa' }}
         </button>
       </div>
@@ -214,7 +214,7 @@
 
       <div class="modal-actions">
         <button type="button" class="btn btn-outline" (click)="cerrarModal()" [disabled]="busy">Cancelar</button>
-        <button type="submit" class="btn btn-dark" [disabled]="busy">
+        <button type="submit" class="btn btn-primary-blue" [disabled]="busy">
           {{ busy ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>

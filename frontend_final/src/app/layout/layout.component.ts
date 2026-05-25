@@ -97,8 +97,17 @@ export class LayoutComponent {
     this.openMenu = null;
   }
 
-  logout(): void {
+  logout(ev?: Event): void {
+    ev?.preventDefault();
+    ev?.stopPropagation();
+    this.openMenu = null;
     this.auth.logout();
-    this.router.navigate(['/login']);
+    // Hard redirect: la forma más confiable. Mata cualquier estado
+    // de Angular que pudiera dejar la sesión zombie.
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    } else {
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    }
   }
 }

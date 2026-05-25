@@ -15,11 +15,14 @@
 }
 .sa-btn:hover { background: #f8fafc; }
 .sa-btn.primary {
-  background: linear-gradient(90deg, #6d28d9, #be185d);
+  background: linear-gradient(135deg, #0052cc, #2563eb);
   color: #fff;
   border-color: transparent;
 }
-.sa-btn.primary:hover { filter: brightness(1.05); }
+.sa-btn.primary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
 .sa-btn.small { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
 .sa-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 

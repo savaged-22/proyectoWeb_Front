@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { LandingPage } from './pages/landing/landing';
 import { LoginPage } from './pages/login/login';
+import { RegisterEmpresaPage } from './pages/register-empresa/register-empresa.component';
 import { authGuard } from './guards/auth.guard';
 import { permisoGuard } from './guards/permiso.guard';
 import { superadminGuard } from './guards/superadmin.guard';
@@ -24,6 +25,7 @@ import { SuperadminEmpresasComponent } from './pages/superadmin-empresas/superad
 export const routes: Routes = [
   { path: '', component: LandingPage },
   { path: 'login', component: LoginPage },
+  { path: 'register-empresa', component: RegisterEmpresaPage },
 
   {
     // tokenRefreshGuard se ejecuta en cada navegación dentro de /app:
