@@ -57,15 +57,15 @@ export class RegisterEmpresaPage {
     const f = this.form;
     if (!f.nombreEmpresa.trim() || !f.nit.trim() || !f.dominio.trim()
         || !f.emailAdmin.trim() || !f.password.trim()) {
-      this.error.set('Completa todos los campos obligatorios.');
+      this.error.set('Please fill in all required fields.');
       return;
     }
     if (!this.emailValido()) {
-      this.error.set(`El correo del admin debe terminar en @${f.dominio}`);
+      this.error.set(`Admin email must end in @${f.dominio}`);
       return;
     }
     if (f.password.length < 8) {
-      this.error.set('La contraseña debe tener al menos 8 caracteres.');
+      this.error.set('Password must be at least 8 characters.');
       return;
     }
 
@@ -85,7 +85,7 @@ export class RegisterEmpresaPage {
       next: (res) => {
         this.busy.set(false);
         this.exito.set(
-          `${res.empresaNombre} registrada. Ya puedes iniciar sesión con ${res.emailAdmin}.`,
+          `${res.empresaNombre} registered. You can now log in as ${res.emailAdmin}.`,
         );
         setTimeout(() => {
           this.router.navigate(['/login'], { queryParams: { email: res.emailAdmin } });
@@ -93,7 +93,7 @@ export class RegisterEmpresaPage {
       },
       error: (err) => {
         this.busy.set(false);
-        this.error.set(err?.error?.message || err?.error?.error || 'No se pudo registrar la empresa.');
+        this.error.set(err?.error?.message || err?.error?.error || 'Could not register the company.');
       },
     });
   }

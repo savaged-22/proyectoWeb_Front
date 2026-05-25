@@ -30,8 +30,11 @@
 }
 .pv-back:hover { background: #f8fafc; }
 .pv-edit {
-  background: linear-gradient(90deg, #6d28d9, #be185d);
+  background: linear-gradient(135deg, #0052cc, #2563eb);
   color: #fff;
   border: none;
 }
-.pv-edit:hover { filter: brightness(1.05); }
+.pv-edit:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}

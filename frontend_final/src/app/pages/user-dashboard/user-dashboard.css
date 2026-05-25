@@ -76,6 +76,8 @@
 .lulo-header h1 {
   color: #0f172a;
   margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .lulo-kpi {
@@ -91,11 +93,23 @@
 
 .lulo-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: 1.5rem;
+  align-items: start;
+}
+.lulo-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+.lulo-col-right {
+  position: sticky;
+  top: 1rem;
 }
 @media (max-width: 900px) {
   .lulo-grid { grid-template-columns: 1fr; }
+  .lulo-col-right { position: static; }
 }
 
 .lulo-empresas {

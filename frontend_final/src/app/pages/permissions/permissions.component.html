@@ -1,27 +1,27 @@
 <header class="page-header">
   <div *ngIf="isLuloInternal; else headerEmpresa">
-    <h1>Roles de la Consola Lulo</h1>
+    <h1>Lulo Console roles</h1>
     <p class="subtitle">
-      Define perfiles para el equipo Lulo. Cada perfil agrupa permisos administrativos.
+      Define profiles for the Lulo team. Each profile groups administrative permissions.
     </p>
   </div>
   <ng-template #headerEmpresa>
     <div>
-      <h1>Roles y Permisos</h1>
+      <h1>Roles &amp; Permissions</h1>
       <p class="subtitle">
-        Define los perfiles de acceso de tu empresa. Cada rol agrupa permisos
-        sobre procesos, diagramas, usuarios y configuración del workspace.
+        Define access profiles for your company. Each role groups permissions
+        over processes, diagrams, users and workspace configuration.
       </p>
     </div>
   </ng-template>
   <div class="actions">
     <button *ngIf="puedeCrearRol" class="btn btn-primary" (click)="abrirModal()">
-      + Nuevo rol
+      + New role
     </button>
   </div>
 </header>
 
-<!-- Pool selector: solo si hay >1 pool. Lulo tiene 1 (Lulo Console) -->
+<!-- Pool selector: only shown when there is more than one pool -->
 <div class="panel mb-2" *ngIf="pools.length > 1">
   <div class="panel-header">
     <div class="panel-title">Pool</div>
@@ -39,9 +39,9 @@
 
 <ng-container *ngIf="loading">
   <div class="state">
-    Cargando roles…
+    Loading roles…
     <button *ngIf="loadingStuck" class="btn btn-outline btn-sm" style="margin-left:1rem"
-            (click)="cargar()">Reintentar</button>
+            (click)="cargar()">Retry</button>
   </div>
 </ng-container>
 
@@ -50,31 +50,29 @@
 </ng-container>
 
 <ng-container *ngIf="!loading && !error && roles.length > 0">
-  <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Total Role Pools</div>
+      <div class="kpi-label">Total roles</div>
       <div class="kpi-value">{{ roles.length }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">System Roles</div>
+      <div class="kpi-label">System roles</div>
       <div class="kpi-value">{{ rolesPropietarios }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Custom Roles</div>
+      <div class="kpi-label">Custom roles</div>
       <div class="kpi-value">{{ rolesCustom }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Permisos disponibles</div>
+      <div class="kpi-label">Available permissions</div>
       <div class="kpi-value">{{ catalogoPermisos.length }}</div>
     </div>
   </div>
 
   <div class="split">
-    <!-- Roles list -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Roles del pool</div>
+        <div class="panel-title">Pool roles</div>
       </div>
       <div class="role-list">
         <div
@@ -88,7 +86,7 @@
           </div>
           <div class="role-details">
             <strong>{{ r.nombre }}</strong>
-            <span>{{ r.permisos.length }} permisos</span>
+            <span>{{ r.permisos.length }} permissions</span>
           </div>
         </div>
       </div>
@@ -102,20 +100,20 @@
           <p class="subtitle" style="font-size:0.8rem;">{{ r.descripcion || '—' }}</p>
         </div>
         <span class="badge" [class]="r.esPropietario ? 'badge amber' : 'badge gray'">
-          {{ r.esPropietario ? 'System (Immutable)' : 'Custom Role' }}
+          {{ r.esPropietario ? 'System (immutable)' : 'Custom role' }}
         </span>
       </div>
 
       <div class="matriz-head">
-        <h4 class="section-heading">Permisos del rol</h4>
+        <h4 class="section-heading">Role permissions</h4>
         <span class="matriz-hint" *ngIf="r.esPropietario">
-          <app-icon name="lock"></app-icon> Rol del sistema — permisos no editables
+          <app-icon name="lock"></app-icon> System role — permissions are not editable
         </span>
         <span class="matriz-hint" *ngIf="!r.esPropietario && !puedeEditarRol">
-          <app-icon name="lock"></app-icon> Solo lectura — no tienes permiso para editar
+          <app-icon name="lock"></app-icon> Read only — you don't have edit permission
         </span>
         <span class="matriz-hint" *ngIf="!r.esPropietario && puedeEditarRol">
-          Activá o desactivá cada permiso
+          Toggle each permission on or off
         </span>
       </div>
 
@@ -139,7 +137,7 @@
 
             <span class="badge amber perm-locked" *ngIf="r.esPropietario">
               <app-icon name="lock"></app-icon>
-              {{ has(r, p.codigo) ? 'Permitido' : 'Bloqueado' }}
+              {{ has(r, p.codigo) ? 'Allowed' : 'Blocked' }}
             </span>
 
             <span
@@ -148,7 +146,7 @@
               [class.gray]="!has(r, p.codigo)"
               *ngIf="!r.esPropietario && !puedeEditarRol"
             >
-              {{ has(r, p.codigo) ? 'Permitido' : 'Bloqueado' }}
+              {{ has(r, p.codigo) ? 'Allowed' : 'Blocked' }}
             </span>
 
             <button
@@ -171,7 +169,7 @@
         </ng-container>
 
         <div class="state" *ngIf="catalogoPermisos.length === 0">
-          Sin permisos en el catálogo.
+          No permissions in catalog.
         </div>
       </div>
     </div>
@@ -180,44 +178,44 @@
 
 <ng-container *ngIf="!loading && roles.length === 0 && !error">
   <div class="state">
-    No tienes pools con roles configurados todavía.
+    You don't have pools with roles configured yet.
   </div>
 </ng-container>
 
-<!-- Modal: Crear Role Pool -->
+<!-- Create role modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Nuevo Role Pool</h3>
+      <h3>New role</h3>
       <button class="modal-close" (click)="cerrarModal()">✕</button>
     </div>
 
     <div class="modal-body">
       <div class="form-group">
-        <label>Nombre <span class="required">*</span></label>
+        <label>Name <span class="required">*</span></label>
         <input
           type="text"
           [(ngModel)]="modalNombre"
-          placeholder="Ej: Editor de procesos"
+          placeholder="e.g. Process editor"
           class="form-input"
         />
       </div>
 
       <div class="form-group">
-        <label>Descripción</label>
+        <label>Description</label>
         <input
           type="text"
           [(ngModel)]="modalDescripcion"
-          placeholder="Opcional"
+          placeholder="Optional"
           class="form-input"
         />
       </div>
 
       <div class="form-group">
         <div class="permisos-head">
-          <label>Permisos</label>
+          <label>Permissions</label>
           <span class="permisos-count">
-            {{ modalPermisos.size }}/{{ catalogoPermisos.length }} elegidos
+            {{ modalPermisos.size }}/{{ catalogoPermisos.length }} selected
           </span>
         </div>
 
@@ -233,7 +231,7 @@
                 [class.active]="estadoGrupo(g.permisos) !== 'none'"
                 (click)="toggleGrupo(g.permisos)"
               >
-                {{ estadoGrupo(g.permisos) === 'all' ? 'Quitar todos' : 'Todos' }}
+                {{ estadoGrupo(g.permisos) === 'all' ? 'Unselect all' : 'Select all' }}
               </button>
             </div>
             <div class="permiso-cards">
@@ -256,7 +254,7 @@
             </div>
           </div>
           <div class="state" *ngIf="catalogoPermisos.length === 0">
-            Sin permisos en el catálogo.
+            No permissions in catalog.
           </div>
         </div>
       </div>
@@ -266,14 +264,14 @@
 
     <div class="modal-footer">
       <button class="btn btn-outline" (click)="cerrarModal()" [disabled]="modalLoading">
-        Cancelar
+        Cancel
       </button>
       <button
         class="btn btn-primary"
         (click)="crearRol()"
         [disabled]="modalLoading || !modalNombre.trim()"
       >
-        {{ modalLoading ? 'Creando…' : 'Crear' }}
+        {{ modalLoading ? 'Creating…' : 'Create' }}
       </button>
     </div>
   </div>

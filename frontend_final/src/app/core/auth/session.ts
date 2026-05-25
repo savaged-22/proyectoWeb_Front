@@ -19,6 +19,8 @@ export interface UserSession {
   poolId: string;
   email: string;
   rol: 'PROPIETARIO' | 'COLABORADOR' | 'ADMIN_EMPRESA' | 'SUPERADMIN';
+  /** Nombre real del rol_pool asignado (ej. "SuperAdmin", "Auditor"). */
+  rolPoolNombre?: string;
   tipoUsuario: TipoUsuario;
   esSuperadmin: boolean;
   esAdminEmpresa: boolean;

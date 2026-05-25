@@ -1,0 +1,84 @@
+<section class="ls-page">
+  <header class="ls-head">
+    <div>
+      <h1>Process inspector
+        <span class="ls-pill">READ ONLY</span>
+      </h1>
+      <p>Pick a company to inspect its processes. You cannot edit anything.</p>
+    </div>
+  </header>
+
+  <div *ngIf="error()" class="ls-state ls-error">{{ error() }}</div>
+
+  <!-- Companies list view -->
+  <ng-container *ngIf="!selectedEmpresa()">
+    <input class="ls-search" type="text" [(ngModel)]="filtroEmpresa"
+           placeholder="Search by name, ID or domain…">
+
+    <div *ngIf="loadingEmpresas()" class="ls-state">Loading companies…</div>
+
+    <div class="ls-grid" *ngIf="!loadingEmpresas()">
+      <button class="ls-card" *ngFor="let e of empresasFiltradas" (click)="abrir(e)">
+        <div class="ls-card-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+        <div class="ls-card-body">
+          <strong>{{ e.nombre }}</strong>
+          <span>{{ e.dominio || '—' }} · ID {{ e.nit }}</span>
+          <div class="ls-card-stats">
+            <span>{{ e.totalUsuarios }} users</span>
+            <span>{{ e.totalProcesos }} processes</span>
+          </div>
+        </div>
+        <span class="ls-card-arrow">→</span>
+      </button>
+    </div>
+
+    <div *ngIf="!loadingEmpresas() && empresasFiltradas.length === 0" class="ls-state">
+      No results.
+    </div>
+  </ng-container>
+
+  <!-- Processes view for selected company -->
+  <ng-container *ngIf="selectedEmpresa() as e">
+    <div class="ls-detail-head">
+      <button class="ls-back" (click)="cerrar()">← Back</button>
+      <div>
+        <strong>{{ e.nombre }}</strong>
+        <span>{{ e.dominio || '—' }} · ID {{ e.nit }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="loadingProcesos()" class="ls-state">Loading processes…</div>
+
+    <table *ngIf="!loadingProcesos() && procesos().length > 0" class="ls-table">
+      <thead>
+        <tr>
+          <th>Process</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of procesos()">
+          <td><strong>{{ p.nombre }}</strong></td>
+          <td>{{ p.categoria || '—' }}</td>
+          <td>
+            <span class="ls-badge"
+                  [class.green]="(p.estado | uppercase) === 'PUBLICADO'"
+                  [class.amber]="(p.estado | uppercase) === 'BORRADOR'"
+                  [class.gray]="(p.estado | uppercase) === 'ARCHIVADO'">
+              ● {{ p.estado | uppercase }}
+            </span>
+          </td>
+          <td>{{ p.createdAt | date:'mediumDate' }}</td>
+          <td><button class="ls-btn" (click)="verProceso(p)">View diagram</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loadingProcesos() && procesos().length === 0" class="ls-state">
+      This company has no processes yet.
+    </div>
+  </ng-container>
+</section>

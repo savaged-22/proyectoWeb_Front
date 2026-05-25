@@ -42,7 +42,9 @@
           <div class="form-group">
             <label for="email">EMAIL ADDRESS</label>
             <div class="input-container">
-              <span class="icon">✉</span>
+              <span class="icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </span>
               <input type="email" id="email" formControlName="email" placeholder="name@company.com" autocomplete="email">
             </div>
             <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="error-msg">
@@ -56,7 +58,9 @@
               <a href="#" class="forgot-link">Forgot password?</a>
             </div>
             <div class="input-container">
-              <span class="icon">🔒</span>
+              <span class="icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
               <input type="password" id="password" formControlName="password" placeholder="••••••••" autocomplete="current-password">
             </div>
             <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="error-msg">
@@ -76,7 +80,9 @@
         <div class="divider"></div>
 
         <div class="sso-info">
-          <div class="sso-icon">🛡️</div>
+          <div class="sso-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+          </div>
           <div class="sso-text">
             <strong>Enterprise SSO available</strong>
             <span>Contact your admin to log in via Okta or Azure AD.</span>
@@ -85,22 +91,48 @@
       </div>
 
       <div class="register-prompt">
-        New to BPM Command? <a href="#">Request Access</a>
+        Don't have a company account yet?
+        <a routerLink="/register-empresa">Register your company →</a>
       </div>
     </div>
 
     <!-- Footer -->
     <footer class="login-footer">
-      <div class="footer-left">
+      <div class="footer-brand">
         <strong>BPM Command Suite</strong>
-        <p>© 2024 BPM Command Suite. Enterprise Grade Operations.</p>
+        <p>Operational control for multi-tenant enterprises.</p>
+        <p class="footer-copy">© 2026 BPM Command · v3.4 Enterprise</p>
       </div>
-      <div class="footer-right">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Security Architecture</a>
-        <a href="#">SLA</a>
-        <a href="#">Documentation</a>
+
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#">Process editor</a>
+          <a href="#">Roles &amp; permissions</a>
+          <a href="#">Metrics &amp; audit</a>
+          <a href="#">Pricing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About us</a>
+          <a href="#">Customers</a>
+          <a href="#">Careers</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="#">Documentation</a>
+          <a href="#">API reference</a>
+          <a href="#">Security</a>
+          <a href="#">Status</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy policy</a>
+          <a href="#">Terms of service</a>
+          <a href="#">SLA</a>
+          <a href="#">DPA</a>
+        </div>
       </div>
     </footer>
   </div>

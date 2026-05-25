@@ -42,10 +42,10 @@ export class LayoutComponent {
   }
 
   get rolBadge(): string {
-    if (this.isSuperadmin) return 'Dueño App';
-    if (this.isAdminEmpresa) return 'Admin Empresa';
-    if (this.session?.rol === 'PROPIETARIO') return 'Propietario';
-    return 'Colaborador';
+    if (this.isSuperadmin) return 'App Owner';
+    if (this.isAdminEmpresa) return 'Company Admin';
+    if (this.session?.rol === 'PROPIETARIO') return 'Owner';
+    return 'Member';
   }
 
   /** Usuario interno de Lulo (superadmin o empresa LULO-APP). */
@@ -100,12 +100,11 @@ export class LayoutComponent {
   logout(ev?: Event): void {
     ev?.preventDefault();
     ev?.stopPropagation();
-    this.openMenu = null;
+    // Limpia sesión y navega inmediatamente. No tocamos this.openMenu
+    // (destruiría el botón vía *ngIf antes de que termine este handler).
     this.auth.logout();
-    // Hard redirect: la forma más confiable. Mata cualquier estado
-    // de Angular que pudiera dejar la sesión zombie.
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      window.location.assign('/login');
     } else {
       this.router.navigateByUrl('/login', { replaceUrl: true });
     }

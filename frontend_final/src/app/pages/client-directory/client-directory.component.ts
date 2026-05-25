@@ -10,6 +10,7 @@ import {
 } from '../../core/models/empresa';
 import { SuperadminService } from '../../services/superadmin.service';
 import { IconComponent } from '../../shared/icon.component';
+import { descargarCsv, timestampFileSafe } from '../../core/csv-export';
 
 type ModalMode = null | 'crear' | 'editar' | 'eliminar';
 
@@ -257,6 +258,19 @@ export class ClientDirectoryComponent implements OnInit {
    * Empresa propietaria de la app (Lulo). Protegida contra edición/borrado
    * para evitar que se desactive accidentalmente al SUPERADMIN.
    */
+  exportarEmpresasCsv(): void {
+    descargarCsv('empresas-' + timestampFileSafe() + '.csv', {
+      'Empresa':       e => e.nombre,
+      'NIT':           e => e.nit,
+      'Dominio':       e => e.dominio || '',
+      'Contacto':      e => e.emailContacto || '',
+      'Usuarios':      e => e.totalUsuarios,
+      'Procesos':      e => e.totalProcesos,
+      'Pools':         e => e.totalPools,
+      'Creada':        e => e.createdAt,
+    }, this.empresasFiltradas);
+  }
+
   esLuloOwner(e: EmpresaListItem): boolean {
     return e.nit === 'LULO-APP';
   }

@@ -1,10 +1,15 @@
 <header class="page-header">
   <div>
-    <h1>Access Control & Identities</h1>
-    <p class="subtitle">Manage system users, define granular roles, and audit permissions.</p>
+    <h1>Access control &amp; identities</h1>
+    <p class="subtitle">Manage users, define granular roles and audit permissions.</p>
   </div>
   <div class="actions">
-    <button class="btn btn-outline">Export Data</button>
+    <button class="btn btn-outline"
+            [disabled]="usuarios.length === 0"
+            (click)="exportarUsuariosCsv()">Export users CSV</button>
+    <button class="btn btn-outline"
+            [disabled]="rolesOrdenados.length === 0"
+            (click)="exportarRolesCsv()">Export roles CSV</button>
   </div>
 </header>
 
@@ -17,11 +22,10 @@
 </ng-container>
 
 <ng-container *ngIf="empresa as e">
-  <!-- Top: users table + invite card -->
   <div class="grid">
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Active Users</div>
+        <div class="panel-title">Active users</div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <input
             type="text"
@@ -35,8 +39,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>User Identifier</th>
-            <th>System Email</th>
+            <th>User identifier</th>
+            <th>System email</th>
             <th>Role</th>
             <th>Status</th>
             <th>Action</th>
@@ -61,25 +65,28 @@
             </td>
             <td>
               <ng-container *ngIf="puedeGestionarRoles; else sinPermiso">
-                <button
-                  *ngIf="!esSuperadminLulo(u); else lockedEdit"
-                  class="btn btn-outline btn-sm"
-                  (click)="abrirEditar(u)"
-                >
-                  Edit
-                </button>
-                <ng-template #lockedEdit>
-                  <button class="btn btn-outline btn-sm" disabled
-                          title="SUPERADMIN protegido — no editable">
-                    🔒 Edit
+                <div class="row-actions">
+                  <button class="icon-action edit"
+                          [disabled]="esSuperadminLulo(u)"
+                          (click)="abrirEditar(u)"
+                          [title]="esSuperadminLulo(u) ? 'Protected user' : 'Edit user'"
+                          aria-label="Edit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
-                </ng-template>
+                  <button class="icon-action del"
+                          [disabled]="esSuperadminLulo(u)"
+                          (click)="abrirEliminar(u)"
+                          [title]="esSuperadminLulo(u) ? 'Protected user' : 'Delete user'"
+                          aria-label="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
               </ng-container>
               <ng-template #sinPermiso><span class="hint">—</span></ng-template>
             </td>
           </tr>
           <tr *ngIf="filteredUsers.length === 0">
-            <td colspan="5" class="state">No hay usuarios que coincidan con la búsqueda.</td>
+            <td colspan="5" class="state">No users match the search.</td>
           </tr>
         </tbody>
       </table>
@@ -87,22 +94,22 @@
       <p class="hint mt-1">Showing {{ filteredUsers.length }} of {{ totalUsers }} registered users</p>
     </div>
 
-    <!-- Right: Invite + Pending -->
+    <!-- Right: Create user -->
     <div>
       <div class="panel invite-card">
-        <strong>Create User</strong>
+        <strong>Create user</strong>
         <p class="subtitle" style="font-size:0.8rem; margin: 0.25rem 0 1rem 0;">
           Add a new team member directly with email, password and role.
         </p>
 
         <div class="form-group">
-          <label>Email Address
+          <label>Email
             <small *ngIf="dominioRequerido" style="color:#94a3b8; font-weight:400">
-              · debe terminar en &#64;{{ dominioRequerido }}
+              · must end in &#64;{{ dominioRequerido }}
             </small>
           </label>
           <input type="email" [(ngModel)]="newUserEmail"
-                 [placeholder]="dominioRequerido ? 'nombre@' + dominioRequerido : 'usuario@company.com'" />
+                 [placeholder]="dominioRequerido ? 'name@' + dominioRequerido : 'user@company.com'" />
         </div>
         <div class="form-group">
           <label>Password</label>
@@ -116,7 +123,7 @@
               type="button"
               class="password-toggle"
               (click)="showNewUserPassword = !showNewUserPassword"
-              [attr.aria-label]="showNewUserPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-label]="showNewUserPassword ? 'Hide password' : 'Show password'"
             >
               <app-icon [name]="showNewUserPassword ? 'eye-off' : 'eye'"></app-icon>
             </button>
@@ -126,24 +133,32 @@
           <label>Role</label>
           <select [(ngModel)]="newUserRolPoolId">
             <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
-            <option *ngIf="roles.length === 0" value="" disabled>No hay roles disponibles</option>
+            <option *ngIf="roles.length === 0" value="" disabled>No roles available</option>
           </select>
         </div>
         <button class="btn btn-primary w-full" (click)="createUser()" [disabled]="creating || !newUserEmail || !newUserPassword || !newUserRolPoolId">
-          {{ creating ? 'Creating…' : 'Create User' }}
+          {{ creating ? 'Creating…' : 'Create user' }}
         </button>
-        <p *ngIf="userStatus" class="hint mt-1" [style.color]="userStatusError ? 'var(--color-error, red)' : 'var(--color-success, green)'">{{ userStatus }}</p>
+        <div *ngIf="userStatus" class="status-banner"
+             [class.is-error]="userStatusError"
+             [class.is-success]="!userStatusError">
+          <span class="status-dot"></span>
+          <span class="status-text">
+            <strong>{{ userStatusError ? 'Could not create' : 'User created' }}</strong>
+            <span>{{ userStatus }}</span>
+          </span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ── Role Pool & Matrix dinámicos ───────────────────────────────────── -->
+  <!-- Role Pool & Matrix -->
   <section class="rp-overview" *ngIf="rolesOrdenados.length > 0">
     <div class="rp-overview-head">
-      <h3>Roles disponibles para asignar</h3>
+      <h3>Roles available to assign</h3>
       <p>
-        Cada usuario recibe uno de estos roles al crearse. Si creas un nuevo
-        rol en "Roles Lulo" aparecerá automáticamente aquí.
+        Each user gets one of these roles when created. New roles you create
+        in "Roles" appear here automatically.
       </p>
     </div>
 
@@ -151,20 +166,20 @@
       <div *ngFor="let r of rolesOrdenados" class="rp-tier-card" [class]="tierOf(r).klass">
         <div class="rp-tier-label">{{ tierOf(r).label }}</div>
         <div class="rp-tier-name">{{ r.nombre }}</div>
-        <p class="rp-tier-desc">{{ r.descripcion || 'Rol personalizado del pool' }}</p>
+        <p class="rp-tier-desc">{{ r.descripcion || 'Custom pool role' }}</p>
         <div class="rp-tier-count">
           {{ r.permisos.length }}
-          {{ r.permisos.length === 1 ? 'permiso' : 'permisos' }}
+          {{ r.permisos.length === 1 ? 'permission' : 'permissions' }}
         </div>
       </div>
     </div>
 
-    <h4 class="rp-matrix-title">Matriz detallada de permisos</h4>
+    <h4 class="rp-matrix-title">Detailed permission matrix</h4>
     <div class="rp-matrix">
       <table>
         <thead>
           <tr>
-            <th>Permiso</th>
+            <th>Permission</th>
             <th *ngFor="let r of rolesOrdenados">{{ r.nombre }}</th>
           </tr>
         </thead>
@@ -188,11 +203,11 @@
   </section>
 </ng-container>
 
-<!-- Modal: editar usuario (asignar rol) -->
+<!-- Edit user modal -->
 <div class="modal-overlay" *ngIf="editUser as eu" (click)="cerrarEditar()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Editar usuario</h3>
+      <h3>Edit user</h3>
       <button class="modal-close" (click)="cerrarEditar()">✕</button>
     </div>
 
@@ -201,20 +216,21 @@
         <span class="avatar">{{ getInitials(eu.email) }}</span>
         <div>
           <strong>{{ eu.email }}</strong>
-          <span class="hint">Rol actual: {{ eu.rolPrincipal }}</span>
+          <span class="hint">Current role: {{ eu.rolPrincipal }}</span>
         </div>
       </div>
 
+      <ng-container *ngIf="!confirmarBorrar">
       <div class="form-group">
-        <label>Rol</label>
+        <label>Role</label>
         <select [(ngModel)]="editRolPoolId">
           <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
-          <option *ngIf="roles.length === 0" value="" disabled>No hay roles disponibles</option>
+          <option *ngIf="roles.length === 0" value="" disabled>No roles available</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Estado</label>
+        <label>Status</label>
         <select [(ngModel)]="editEstado">
           <option *ngFor="let e of estadosDisponibles" [value]="e">
             {{ e | titlecase }}
@@ -222,26 +238,56 @@
         </select>
       </div>
 
-      <p
-        *ngIf="editStatus"
-        class="hint"
-        [style.color]="editError ? 'var(--color-danger)' : 'var(--color-success)'"
-      >
-        {{ editStatus }}
-      </p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="editEmail">
+      </div>
+
+      <div class="form-group">
+        <label>New password <small>(optional · min 6)</small></label>
+        <input type="password" [(ngModel)]="editPassword"
+               placeholder="Leave empty to keep current" minlength="6">
+      </div>
+      </ng-container>
+
+      <div *ngIf="editStatus" class="status-banner"
+           [class.is-error]="editError" [class.is-success]="!editError">
+        <span class="status-dot"></span>
+        <span class="status-text">
+          <strong>{{ editError ? 'Error' : 'Done' }}</strong>
+          <span>{{ editStatus }}</span>
+        </span>
+      </div>
+
+      <div *ngIf="confirmarBorrar" class="status-banner is-error" style="margin-top:0.5rem">
+        <span class="status-dot"></span>
+        <span class="status-text">
+          <strong>Delete {{ eu.email }}?</strong>
+          <span>The user will be marked inactive. You can reactivate them later by changing the status.</span>
+        </span>
+      </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-outline" (click)="cerrarEditar()" [disabled]="editSaving">
-        Cerrar
-      </button>
-      <button
-        class="btn btn-primary"
-        (click)="guardarUsuario()"
-        [disabled]="editSaving"
-      >
-        {{ editSaving ? 'Guardando…' : 'Guardar cambios' }}
-      </button>
+      <ng-container *ngIf="!confirmarBorrar; else footerConfirm">
+        <span style="flex:1"></span>
+        <button class="btn btn-outline" (click)="cerrarEditar()" [disabled]="editSaving">
+          Close
+        </button>
+        <button class="btn btn-primary" (click)="guardarUsuario()"
+                [disabled]="editSaving">
+          {{ editSaving ? 'Saving…' : 'Save changes' }}
+        </button>
+      </ng-container>
+      <ng-template #footerConfirm>
+        <button class="btn btn-outline" (click)="cerrarEditar()" [disabled]="borrando">
+          Cancel
+        </button>
+        <span style="flex:1"></span>
+        <button class="btn btn-danger" (click)="eliminarUsuario()" [disabled]="borrando">
+          {{ borrando ? 'Deleting…' : 'Yes, delete' }}
+        </button>
+      </ng-template>
     </div>
   </div>
 </div>

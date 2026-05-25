@@ -102,7 +102,8 @@
 
 .nav-icons {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .icon-btn {
@@ -469,12 +470,69 @@ button.menu-item {
   text-transform: uppercase;
 }
 .menu-item.readonly {
-  color: #6d28d9;
-  font-style: italic;
+  color: #2563eb;
 }
-.menu-item.readonly::after {
-  content: '👁';
-  margin-left: auto;
-  font-size: 0.75rem;
-  opacity: 0.6;
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  max-width: 280px;
+}
+.user-chip-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0052cc, #2563eb);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-chip-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.user-chip-info strong {
+  font-size: 0.78rem;
+  color: #0f172a;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-chip-info span {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #b91c1c;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.logout-btn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }

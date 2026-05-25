@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { EmpresaDetail, UsuarioBasico } from '../../core/models/empresa';
+import { descargarCsv, timestampFileSafe } from '../../core/csv-export';
 import { RolPool } from '../../core/models/rol-pool';
 import { EmpresaService } from '../../services/empresa.service';
 import { AuthService } from '../../services/auth.service';
@@ -39,56 +40,105 @@ export class UserManagementComponent implements OnInit {
   userStatusError = false;
   creating = false;
 
-  // ── Modal de edición: rol + estado de un usuario ────────────────────────
+  // ── Modal de edición: rol + estado + email + password ──────────────────
   editUser?: UsuarioBasico;
   editRolPoolId = '';
   editEstado = '';
+  editEmail = '';
+  editPassword = '';
   editStatus = '';
   editError = false;
   editSaving = false;
+  confirmarBorrar = false;
+  borrando = false;
 
   readonly estadosDisponibles = ['activo', 'suspendido', 'inactivo', 'pendiente'];
 
   get puedeGestionarRoles(): boolean {
-    return this.auth.can('POOL_ADMINISTRAR');
+    return this.auth.isSuperadmin()
+        || this.auth.isAdminEmpresa()
+        || this.auth.can('POOL_ADMINISTRAR')
+        || this.auth.can('LULO_USUARIO_EDITAR')
+        || this.auth.can('LULO_USUARIO_CREAR');
   }
 
   abrirEditar(u: UsuarioBasico): void {
     this.editUser = u;
     this.editRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';
     this.editEstado = (u.estado || 'activo').toLowerCase();
+    this.editEmail = u.email;
+    this.editPassword = '';
     this.editStatus = '';
     this.editError = false;
+    this.confirmarBorrar = false;
+  }
+
+  /** Abre el modal directamente en modo confirmación de borrado. */
+  abrirEliminar(u: UsuarioBasico): void {
+    this.editUser = u;
+    this.editEmail = u.email;
+    this.editStatus = '';
+    this.editError = false;
+    this.confirmarBorrar = true;
   }
 
   cerrarEditar(): void {
     this.editUser = undefined;
+    this.confirmarBorrar = false;
+    this.editPassword = '';
   }
 
+  /** Encadena los PATCH necesarios (rol/estado, email, password). */
   guardarUsuario(): void {
     const session = this.auth.getSession();
     if (!this.editUser || !session) return;
+    const uid = this.editUser.id;
     this.editSaving = true;
     this.editStatus = '';
     this.editError = false;
-    this.usuarioService
-      .actualizar(this.editUser.id, {
-        rolPoolId: this.editRolPoolId || undefined,
-        estado: this.editEstado || undefined,
-      })
-      .subscribe({
-        next: () => {
-          this.editSaving = false;
-          this.editStatus = 'Cambios guardados correctamente.';
-          this.editError = false;
-          this.loadUsuarios(session.empresaId);
-        },
-        error: (err) => {
-          this.editSaving = false;
-          this.editStatus = err?.error?.message ?? 'No se pudieron guardar los cambios.';
-          this.editError = true;
-        },
-      });
+
+    const promesas: Promise<any>[] = [];
+    promesas.push(this.usuarioService.actualizar(uid, {
+      rolPoolId: this.editRolPoolId || undefined,
+      estado: this.editEstado || undefined,
+    }).toPromise());
+    if (this.editEmail && this.editEmail !== this.editUser.email) {
+      promesas.push(this.usuarioService.cambiarEmail(uid, this.editEmail).toPromise());
+    }
+    if (this.editPassword && this.editPassword.length >= 6) {
+      promesas.push(this.usuarioService.cambiarPassword(uid, this.editPassword).toPromise());
+    }
+
+    Promise.all(promesas).then(() => {
+      this.editSaving = false;
+      this.editStatus = 'Cambios guardados.';
+      this.editError = false;
+      this.editPassword = '';
+      this.loadUsuarios(session.empresaId);
+    }).catch((err) => {
+      this.editSaving = false;
+      this.editError = true;
+      this.editStatus = err?.error?.message || err?.error?.error || 'No se pudieron guardar los cambios.';
+    });
+  }
+
+  /** Elimina (soft delete) tras confirmar. */
+  eliminarUsuario(): void {
+    const session = this.auth.getSession();
+    if (!this.editUser || !session) return;
+    this.borrando = true;
+    this.usuarioService.eliminar(this.editUser.id).subscribe({
+      next: () => {
+        this.borrando = false;
+        this.cerrarEditar();
+        this.loadUsuarios(session.empresaId);
+      },
+      error: (err) => {
+        this.borrando = false;
+        this.editError = true;
+        this.editStatus = err?.error?.message || err?.error?.error || 'No se pudo eliminar.';
+      },
+    });
   }
 
   ngOnInit(): void {
@@ -176,7 +226,7 @@ export class UserManagementComponent implements OnInit {
       password: this.newUserPassword,
     }).subscribe({
       next: (res) => {
-        this.userStatus = `Usuario ${res.email} creado exitosamente con rol "${res.rolAsignado}".`;
+        this.userStatus = `${res.email} · ${res.rolAsignado}`;
         this.userStatusError = false;
         this.newUserEmail = '';
         this.newUserPassword = '';
@@ -230,7 +280,8 @@ export class UserManagementComponent implements OnInit {
 
   /** El SUPERADMIN dueño de la app no se puede editar desde esta vista. */
   esSuperadminLulo(u: UsuarioBasico): boolean {
-    return (u.email || '').toLowerCase() === 'admin@lulo.app';
+    return !!u.protegido
+        || (u.email || '').toLowerCase() === 'admin@lulo.app';
   }
 
   badgeForEstado(estado: string): string {
@@ -351,5 +402,25 @@ export class UserManagementComponent implements OnInit {
     const cobertura = rol.permisos.length;
     if (cobertura >= 5) return { label: 'WRITE ACCESS', klass: 'tier-write' };
     return { label: 'READ ONLY', klass: 'tier-read' };
+  }
+
+  exportarUsuariosCsv(): void {
+    descargarCsv('usuarios-' + timestampFileSafe() + '.csv', {
+      'Email':     u => u.email,
+      'Estado':    u => u.estado,
+      'Rol':       u => u.rolPrincipal,
+      'Protegido': u => u.protegido ? 'Sí' : 'No',
+      'Creado':    u => u.createdAt,
+    }, this.usuarios);
+  }
+
+  exportarRolesCsv(): void {
+    descargarCsv('roles-' + timestampFileSafe() + '.csv', {
+      'Rol':         (r: RolPool) => r.nombre,
+      'Descripción': (r: RolPool) => r.descripcion || '',
+      'Tipo':        (r: RolPool) => this.tierOf(r).label,
+      'Permisos':    (r: RolPool) => r.permisos.length,
+      'Códigos':     (r: RolPool) => r.permisos.map(p => p.codigo).join(' | '),
+    }, this.rolesOrdenados);
   }
 }

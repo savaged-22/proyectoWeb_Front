@@ -1,123 +1,183 @@
-<!-- ────────── DASHBOARD LULO (superadmin + empresa LULO-APP) ────────── -->
+<!-- ────────── LULO DASHBOARD ────────── -->
 <ng-container *ngIf="isLuloInternal">
   <header class="page-header lulo-header">
     <div>
-      <h1>Consola Lulo</h1>
-      <p class="subtitle">Operación de la plataforma. Gestionas empresas cliente, usuarios internos y métricas globales.</p>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Operational summary of the platform.</p>
     </div>
-    <div class="actions">
-      <a class="btn btn-primary" routerLink="/app/clients">Gestionar empresas</a>
+    <div class="actions" *ngIf="puedeGestionarEmpresas">
+      <a class="btn btn-primary" routerLink="/app/clients">Manage companies</a>
     </div>
   </header>
 
-  <div *ngIf="loading || loadingEmpresas" class="state">Cargando consola…</div>
+  <div *ngIf="loading || loadingEmpresas" class="state">Loading console…</div>
   <div *ngIf="!loading && error" class="state error">{{ error }}</div>
 
   <ng-container *ngIf="!loading && !error">
+
+    <!-- Modular KPIs: each card shows only if the role applies -->
     <div class="kpi-grid lulo-kpi">
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-label">Empresas activas</div>
+      <div class="kpi-card kpi-purple" *ngIf="puedeVerEmpresas">
+        <div class="kpi-label">Active companies</div>
         <div class="kpi-value">{{ totalEmpresas }}</div>
-        <div class="kpi-trend">↑ clientes en la plataforma</div>
+        <div class="kpi-trend">Clients on the platform</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Usuarios totales</div>
+      <div class="kpi-card" *ngIf="puedeVerEmpresas">
+        <div class="kpi-label">Total users</div>
         <div class="kpi-value">{{ totalUsuariosCliente }}</div>
-        <div class="kpi-trend">Suma de todas las empresas</div>
+        <div class="kpi-trend">Across all companies</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Procesos en cliente</div>
-        <div class="kpi-value">{{ totalProcesosCliente }}</div>
-        <div class="kpi-trend">Workflows operativos</div>
+      <div class="kpi-card" *ngIf="puedeVerUsuariosLulo">
+        <div class="kpi-label">Lulo users</div>
+        <div class="kpi-value">{{ totalUsuariosLulo }}</div>
+        <div class="kpi-trend">Internal team</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Estado plataforma</div>
+      <div class="kpi-card" *ngIf="puedeGestionarRolesLulo">
+        <div class="kpi-label">Console roles</div>
+        <div class="kpi-value">{{ totalRolesLulo }}</div>
+        <div class="kpi-trend">Assignable profiles</div>
+      </div>
+      <div class="kpi-card" *ngIf="puedeVerAuditoria">
+        <div class="kpi-label">Platform status</div>
         <div class="kpi-value">OK</div>
         <div class="kpi-trend">○ health pass</div>
       </div>
     </div>
 
     <div class="lulo-grid">
-      <section class="panel">
+     <!-- LEFT COLUMN: contextual data by permission -->
+     <div class="lulo-col-left">
+
+      <section class="panel" *ngIf="puedeVerEmpresas">
         <div class="panel-header">
-          <strong>Últimas empresas registradas</strong>
-          <a routerLink="/app/clients" class="hint">Ver todas →</a>
+          <strong>Latest registered companies</strong>
+          <a routerLink="/app/clients" class="hint">View all →</a>
         </div>
         <div class="lulo-empresas">
-          <div *ngIf="ultimasEmpresas.length === 0" class="state">Sin empresas todavía.</div>
+          <div *ngIf="ultimasEmpresas.length === 0" class="state">No companies yet.</div>
           <div class="lulo-empresa-row" *ngFor="let e of ultimasEmpresas">
             <div class="lulo-empresa-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
             <div class="lulo-empresa-info">
               <strong>{{ e.nombre }}</strong>
-              <span>{{ e.dominio || '—' }} · NIT {{ e.nit }}</span>
+              <span>{{ e.dominio || '—' }} · ID {{ e.nit }}</span>
             </div>
             <div class="lulo-empresa-stats">
-              <span>{{ e.totalUsuarios }} usuarios</span>
+              <span>{{ e.totalUsuarios }} users</span>
               <span>{{ e.totalPools }} pools</span>
             </div>
-            <a [routerLink]="['/app/clients']" class="btn btn-outline btn-sm">Abrir</a>
+            <a [routerLink]="['/app/clients']" class="btn btn-outline btn-sm">Open</a>
           </div>
         </div>
       </section>
 
+      <section class="panel" *ngIf="puedeVerUsuariosLulo">
+        <div class="panel-header">
+          <strong>Lulo team</strong>
+          <a routerLink="/app/users" class="hint">Manage →</a>
+        </div>
+        <div class="lulo-empresas">
+          <div *ngIf="ultimosUsuariosLulo.length === 0" class="state">No internal users yet.</div>
+          <div class="lulo-empresa-row" *ngFor="let u of ultimosUsuariosLulo">
+            <div class="lulo-empresa-logo">{{ (u.email || '?').charAt(0).toUpperCase() }}</div>
+            <div class="lulo-empresa-info">
+              <strong>{{ u.email }}</strong>
+              <span>Status: {{ u.estado | uppercase }}</span>
+            </div>
+            <a routerLink="/app/users" class="btn btn-outline btn-sm">View</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" *ngIf="puedeVerSoporte && ultimasEmpresas.length > 0">
+        <div class="panel-header">
+          <strong>Processes by company</strong>
+          <a routerLink="/app/lulo/soporte" class="hint">Inspect →</a>
+        </div>
+        <div class="lulo-empresas">
+          <div class="lulo-empresa-row" *ngFor="let e of ultimasEmpresas">
+            <div class="lulo-empresa-logo">{{ e.nombre.charAt(0).toUpperCase() }}</div>
+            <div class="lulo-empresa-info">
+              <strong>{{ e.nombre }}</strong>
+              <span>{{ e.totalProcesos }} processes · {{ e.totalUsuarios }} users</span>
+            </div>
+            <a routerLink="/app/lulo/soporte" class="btn btn-outline btn-sm">View</a>
+          </div>
+        </div>
+      </section>
+
+     </div>
+
+     <!-- RIGHT COLUMN: quick access always -->
+     <aside class="lulo-col-right">
       <section class="panel">
-        <div class="panel-header"><strong>Accesos rápidos</strong></div>
+        <div class="panel-header"><strong>Quick access</strong></div>
         <div class="lulo-quick">
-          <a routerLink="/app/clients" class="lulo-quick-card">
+          <a *ngIf="puedeVerEmpresas" routerLink="/app/clients" class="lulo-quick-card">
             <span class="lq-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
             </span>
             <span class="lq-text">
-              <strong>Empresas</strong>
-              <span>Crear, editar, suspender</span>
+              <strong>Companies</strong>
+              <span>Create, edit, suspend</span>
             </span>
             <span class="lq-arrow">→</span>
           </a>
-          <a routerLink="/app/users" class="lulo-quick-card">
+          <a *ngIf="puedeVerUsuariosLulo" routerLink="/app/users" class="lulo-quick-card">
             <span class="lq-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </span>
             <span class="lq-text">
-              <strong>Usuarios Lulo</strong>
-              <span>Equipo interno</span>
+              <strong>Lulo users</strong>
+              <span>Internal team</span>
             </span>
             <span class="lq-arrow">→</span>
           </a>
-          <a routerLink="/app/permissions" class="lulo-quick-card">
+          <a *ngIf="puedeGestionarRolesLulo" routerLink="/app/permissions" class="lulo-quick-card">
             <span class="lq-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </span>
             <span class="lq-text">
-              <strong>Roles Lulo</strong>
-              <span>Permisos granulares</span>
+              <strong>Lulo roles</strong>
+              <span>Granular permissions</span>
             </span>
             <span class="lq-arrow">→</span>
           </a>
-          <a routerLink="/app/monitoring" class="lulo-quick-card">
+          <a *ngIf="puedeVerAuditoria" routerLink="/app/lulo/metricas" class="lulo-quick-card">
             <span class="lq-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
             </span>
             <span class="lq-text">
-              <strong>Auditoría</strong>
-              <span>Eventos &amp; métricas</span>
+              <strong>Metrics</strong>
+              <span>Global counters</span>
+            </span>
+            <span class="lq-arrow">→</span>
+          </a>
+          <a *ngIf="puedeVerSoporte" routerLink="/app/lulo/soporte" class="lulo-quick-card">
+            <span class="lq-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3"></circle></svg>
+            </span>
+            <span class="lq-text">
+              <strong>Process inspector</strong>
+              <span>Read only</span>
             </span>
             <span class="lq-arrow">→</span>
           </a>
         </div>
       </section>
+     </aside>
     </div>
   </ng-container>
 </ng-container>
 
-<!-- ────────── DASHBOARD EMPRESA CLIENTE ────────── -->
+<!-- ────────── CLIENT COMPANY DASHBOARD ────────── -->
 <header class="page-header" *ngIf="!isLuloInternal">
   <div>
     <h1>Operational Command</h1>
     <p class="subtitle">Real-time infrastructure performance and audit summary.</p>
   </div>
   <div class="actions">
-    <button class="btn btn-outline">Last 24 Hours</button>
-    <button class="btn btn-primary">Export Report</button>
+    <button class="btn btn-outline">Last 24 hours</button>
+    <button class="btn btn-primary">Export report</button>
   </div>
 </header>
 
@@ -130,35 +190,29 @@
 </ng-container>
 
 <ng-container *ngIf="!isLuloInternal && empresa as e">
-  <!-- KPIs -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Active Processes</div>
+      <div class="kpi-label">Active processes</div>
       <div class="kpi-value">{{ e.totalProcesos }}</div>
-      <div class="kpi-trend">↑ proceso</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Total Users</div>
+      <div class="kpi-label">Total users</div>
       <div class="kpi-value">{{ e.totalUsuarios }}</div>
-      <div class="kpi-trend muted">Stable · usuario</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Total Pools</div>
+      <div class="kpi-label">Total pools</div>
       <div class="kpi-value">{{ e.totalPools }}</div>
-      <div class="kpi-trend muted">pools</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Roles configurados</div>
+      <div class="kpi-label">Roles configured</div>
       <div class="kpi-value">{{ e.totalRolesPool }}</div>
-      <div class="kpi-trend muted">rol_pool</div>
     </div>
   </div>
 
-  <!-- Body -->
   <div class="dash-grid">
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Equipo de la empresa</div>
+        <div class="panel-title">Company team</div>
         <a routerLink="/app/users" class="manage-link">Manage users →</a>
       </div>
 
@@ -184,7 +238,7 @@
             <td>{{ u.createdAt | date:'short' }}</td>
           </tr>
           <tr *ngIf="e.usuarios.length === 0">
-            <td colspan="4" class="state">Aún no hay usuarios en la empresa.</td>
+            <td colspan="4" class="state">No users in the company yet.</td>
           </tr>
         </tbody>
       </table>
@@ -192,15 +246,15 @@
 
     <div class="panel company-card">
       <strong style="font-size:1.1rem">{{ e.nombre }}</strong>
-      <span style="color:#cbd5e1; font-size:0.85rem">Enterprise Infrastructure Entity</span>
+      <span style="color:#cbd5e1; font-size:0.85rem">Enterprise infrastructure entity</span>
 
       <div class="ic-grid">
         <div>
-          <span class="ic-label">NIT</span>
+          <span class="ic-label">ID</span>
           <span class="ic-value">{{ e.nit }}</span>
         </div>
         <div>
-          <span class="ic-label">Contacto</span>
+          <span class="ic-label">Contact</span>
           <span class="ic-value">{{ e.emailContacto || '—' }}</span>
         </div>
       </div>
@@ -220,7 +274,7 @@
       </div>
 
       <a [routerLink]="['/app/clients', e.id]" class="btn btn-outline w-full" style="background:#fff; margin-top:1rem">
-        Manage Company Profile
+        Manage company profile
       </a>
     </div>
   </div>

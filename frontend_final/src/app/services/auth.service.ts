@@ -82,7 +82,8 @@ export class AuthService {
   displayEmpresaName(): string {
     const s = getSession();
     if (!s) return '';
-    if (s.esSuperadmin) return 'Lulo';
+    // Cualquier usuario interno de Lulo ve "Lulo" como marca de empresa.
+    if (s.esSuperadmin || s.empresaEsLulo) return 'Lulo';
     return s.empresaNombre || '';
   }
 
@@ -110,6 +111,7 @@ export class AuthService {
       poolId: raw.poolId ?? '',
       email: raw.email,
       rol: raw.rol ?? 'COLABORADOR',
+      rolPoolNombre: raw.rolPoolNombre,
       tipoUsuario: tipo,
       esSuperadmin: !!raw.esSuperadmin || tipo === 'SUPERADMIN',
       esAdminEmpresa: !!raw.esAdminEmpresa || tipo === 'ADMIN_EMPRESA',

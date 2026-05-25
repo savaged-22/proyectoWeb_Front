@@ -117,7 +117,7 @@ export class PermissionsComponent implements OnInit {
   }
 
   get puedeEditarRol(): boolean {
-    return this.auth.can('ROL_EDITAR');
+    return this.auth.can('ROL_EDITAR') || this.auth.can('LULO_ROL_GESTIONAR');
   }
 
   // ── Matriz interactiva: prender/apagar permisos del rol ─────────────────

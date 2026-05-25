@@ -48,4 +48,18 @@ export class UsuarioService {
   ): Observable<ActualizarUsuarioResponse> {
     return this.http.patch<ActualizarUsuarioResponse>(`${this.base}/${usuarioId}`, payload);
   }
+
+  cambiarPassword(usuarioId: string, password: string): Observable<{ mensaje: string }> {
+    return this.http.patch<{ mensaje: string }>(
+      `${this.base}/${usuarioId}/password`, { password });
+  }
+
+  cambiarEmail(usuarioId: string, email: string): Observable<{ mensaje: string }> {
+    return this.http.patch<{ mensaje: string }>(
+      `${this.base}/${usuarioId}/email`, { email });
+  }
+
+  eliminar(usuarioId: string): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`${this.base}/${usuarioId}`);
+  }
 }

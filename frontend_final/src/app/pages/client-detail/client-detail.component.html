@@ -1,11 +1,11 @@
 <nav class="breadcrumb">
-  <a routerLink="/app/clients">Client Directory</a>
+  <a routerLink="/app/clients">Companies</a>
   <span>/</span>
-  <span class="current">Client Profile</span>
+  <span class="current">Company profile</span>
 </nav>
 
 <ng-container *ngIf="loading">
-  <div class="state">Loading client…</div>
+  <div class="state">Loading company…</div>
 </ng-container>
 
 <ng-container *ngIf="!loading && error">
@@ -19,16 +19,16 @@
       <span class="badge blue mb-1">ACTIVE ACCOUNT</span>
       <h2 style="margin:0.5rem 0 0.25rem 0">{{ e.nombre }}</h2>
       <p class="subtitle" style="color:var(--color-text-muted); font-size:0.85rem; margin:0 0 1.25rem 0;">
-        Strategic partner for intermodal shipping and regional hub management — operational tracking enabled.
+        Company profile — workspace, users and processes are isolated from other companies.
       </p>
 
       <div class="info-row">
         <div>
-          <span class="info-label">Tax ID (NIT)</span>
+          <span class="info-label">Tax ID</span>
           <span class="info-value">{{ e.nit }}</span>
         </div>
         <div>
-          <span class="info-label">Primary Contact</span>
+          <span class="info-label">Primary contact</span>
           <span class="info-value">{{ e.emailContacto || '—' }}</span>
         </div>
         <div>
@@ -43,9 +43,9 @@
     </div>
 
     <div class="panel compliance-panel">
-      <div class="panel-title" style="color:#fff">Compliance Matrix</div>
+      <div class="panel-title" style="color:#fff">Compliance matrix</div>
       <p style="color:#cbd5e1; font-size:0.8rem; margin:0.5rem 0 1rem 0;">
-        All audit checks passed for current cycle.
+        All audit checks passed for the current cycle.
       </p>
 
       <div class="progress-bar">
@@ -62,7 +62,7 @@
   <div class="panel mt-2">
     <div class="panel-header">
       <div class="panel-title">
-        User Registry
+        User registry
         <span class="badge gray" style="margin-left:0.5rem">{{ e.totalUsuarios }} USERS</span>
       </div>
       <div style="display:flex; gap:0.5rem;">
@@ -74,7 +74,7 @@
           name="filterText"
         />
         <a routerLink="/app/users" class="btn btn-primary btn-sm" *ngIf="!isLuloInternal">
-          + Crear usuario
+          + Create user
         </a>
       </div>
     </div>
@@ -82,10 +82,10 @@
     <table class="data-table" *ngIf="filteredUsuarios.length > 0; else noUsers">
       <thead>
         <tr>
-          <th>User Identity</th>
-          <th>Pool Roles</th>
-          <th>Security Status</th>
-          <th>Last Activity</th>
+          <th>User identity</th>
+          <th>Pool roles</th>
+          <th>Status</th>
+          <th>Last activity</th>
         </tr>
       </thead>
       <tbody>
@@ -108,53 +108,52 @@
     </table>
 
     <ng-template #noUsers>
-      <div class="state">No hay usuarios que coincidan con el filtro.</div>
+      <div class="state">No users match the filter.</div>
     </ng-template>
   </div>
 
-  <!-- Footer KPI strip -->
   <div class="kpi-strip">
     <div class="kpi-card">
-      <div class="kpi-label">Total Pools</div>
+      <div class="kpi-label">Total pools</div>
       <div class="kpi-value">{{ e.totalPools }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Total Procesos</div>
+      <div class="kpi-label">Total processes</div>
       <div class="kpi-value">{{ e.totalProcesos }}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Roles definidos</div>
+      <div class="kpi-label">Roles defined</div>
       <div class="kpi-value">{{ e.totalRolesPool }}</div>
     </div>
     <div class="kpi-card primary">
       <div class="kpi-label" style="color:rgba(255,255,255,0.8)">Resource usage</div>
-      <div class="kpi-value" style="color:#fff">45GB</div>
+      <div class="kpi-value" style="color:#fff">45 GB</div>
     </div>
   </div>
 
-  <!-- ───────── Procesos cliente (Lulo internos · read-only) ───────── -->
+  <!-- Client processes (Lulo internals · read-only) -->
   <section class="panel" *ngIf="isLuloInternal" style="margin-top: 1.5rem;">
     <div class="panel-header">
       <div>
-        <strong>Procesos de {{ e.nombre }}</strong>
-        <span class="readonly-pill">👁 READ ONLY · Soporte</span>
+        <strong>{{ e.nombre }} processes</strong>
+        <span class="readonly-pill">READ ONLY · Support</span>
       </div>
     </div>
 
-    <div class="state" *ngIf="loadingProcesos">Cargando procesos…</div>
+    <div class="state" *ngIf="loadingProcesos">Loading processes…</div>
     <div class="state error" *ngIf="errorProcesos">{{ errorProcesos }}</div>
 
     <div *ngIf="!loadingProcesos && !errorProcesos && procesos.length === 0" class="state">
-      Esta empresa aún no tiene procesos.
+      This company has no processes yet.
     </div>
 
     <table class="proc-table" *ngIf="!loadingProcesos && procesos.length > 0">
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Categoría</th>
-          <th>Estado</th>
-          <th>Creado</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Created</th>
           <th></th>
         </tr>
       </thead>
@@ -172,7 +171,9 @@
           </td>
           <td>{{ p.createdAt | date:'mediumDate' }}</td>
           <td>
-            <a class="btn btn-outline btn-sm" [routerLink]="['/app/process-view', p.id]">Ver</a>
+            <a class="btn btn-outline btn-sm"
+               [routerLink]="['/app/process-view', p.id]"
+               [queryParams]="{ back: 'clients', empresa: empresa?.id }">View</a>
           </td>
         </tr>
       </tbody>

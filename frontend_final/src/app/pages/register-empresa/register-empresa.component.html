@@ -1,75 +1,74 @@
 <div class="re-page">
   <nav class="re-nav">
     <a routerLink="/" class="re-logo">BPM <span>COMMAND</span></a>
-    <a routerLink="/login" class="re-login-link">Ya tengo cuenta · Log In</a>
+    <a routerLink="/login" class="re-login-link">I already have an account · Log in</a>
   </nav>
 
   <main class="re-main">
     <section class="re-hero">
-      <span class="re-tag">REGISTRO DE EMPRESA</span>
-      <h1>Crea el espacio de tu organización</h1>
+      <span class="re-tag">COMPANY REGISTRATION</span>
+      <h1>Create your organization's workspace</h1>
       <p>
-        Configura tu empresa con un administrador inicial. Cada usuario que
-        invites pertenecerá a esta organización y solo verá sus propios
-        procesos.
+        Set up your company with an initial administrator. Every user you
+        invite belongs to this organization and only sees its own processes.
       </p>
       <ul class="re-bullets">
-        <li>✓ Aislamiento total de datos entre empresas</li>
-        <li>✓ Roles y permisos granulares</li>
-        <li>✓ Visor y editor de procesos BPMN</li>
-        <li>✓ Auditoría y métricas integradas</li>
+        <li>✓ Full data isolation between companies</li>
+        <li>✓ Granular roles and permissions</li>
+        <li>✓ BPMN process viewer and editor</li>
+        <li>✓ Built-in audit and metrics</li>
       </ul>
     </section>
 
     <section class="re-form-wrap">
       <form class="re-form" (ngSubmit)="submit()">
-        <h2>Datos de la empresa</h2>
+        <h2>Company details</h2>
 
         <label>
-          <span>Nombre de la empresa *</span>
+          <span>Company name *</span>
           <input type="text" [(ngModel)]="form.nombreEmpresa" name="nombreEmpresa"
                  placeholder="Acme Corporation" required>
         </label>
 
         <div class="re-row">
           <label>
-            <span>NIT / Identificador *</span>
+            <span>Tax ID *</span>
             <input type="text" [(ngModel)]="form.nit" name="nit"
                    placeholder="900.123.456-7" required>
           </label>
           <label>
-            <span>Dominio email * <small>(ej. acme.com)</small></span>
+            <span>Email domain * <small>(e.g. acme.com)</small></span>
             <input type="text" [(ngModel)]="form.dominio" name="dominio"
                    (blur)="sugerirEmail()" placeholder="acme.com" required>
           </label>
         </div>
 
         <label>
-          <span>Email de contacto</span>
+          <span>Contact email</span>
           <input type="email" [(ngModel)]="form.emailContacto" name="emailContacto"
-                 placeholder="contacto@acme.com">
+                 placeholder="contact@acme.com">
         </label>
 
-        <h2 class="re-section-title">Administrador inicial</h2>
+        <h2 class="re-section-title">Initial administrator</h2>
 
         <label>
-          <span>Email del admin *
-            <small *ngIf="form.dominio">debe terminar en &#64;{{ form.dominio }}</small>
+          <span>Admin email *
+            <small *ngIf="form.dominio">must end in &#64;{{ form.dominio }}</small>
           </span>
           <input type="email" [(ngModel)]="form.emailAdmin" name="emailAdmin"
-                 [placeholder]="form.dominio ? 'admin@' + form.dominio : 'admin@empresa.com'"
+                 [placeholder]="form.dominio ? 'admin@' + form.dominio : 'admin@company.com'"
                  required>
         </label>
 
         <label>
-          <span>Contraseña * <small>mínimo 8 caracteres</small></span>
+          <span>Password * <small>min 8 characters</small></span>
           <div class="re-pass">
             <input [type]="showPassword() ? 'text' : 'password'"
                    [(ngModel)]="form.password" name="password"
                    minlength="8" required>
             <button type="button" class="re-pass-toggle"
                     (click)="showPassword.set(!showPassword())">
-              {{ showPassword() ? '🙈' : '👁' }}
+              {{ showPassword() ? 'Hide' : 'Show' }}
             </button>
           </div>
         </label>
@@ -78,13 +77,12 @@
         <p *ngIf="exito()" class="re-msg-ok">{{ exito() }}</p>
 
         <button type="submit" class="re-submit" [disabled]="busy()">
-          {{ busy() ? 'Creando…' : 'Crear empresa' }}
+          {{ busy() ? 'Creating…' : 'Create company' }}
         </button>
 
         <p class="re-fineprint">
-          Al registrarte aceptas que los datos de tu empresa queden almacenados
-          en la plataforma. Puedes solicitar la desactivación de tu cuenta en
-          cualquier momento.
+          By registering you accept that your company data will be stored on
+          the platform. You can request deactivation at any time.
         </p>
       </form>
     </section>

@@ -182,9 +182,14 @@ label {
 .input-container .icon {
   position: absolute;
   left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #94a3b8;
-  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+.input-container .icon svg { display: block; }
 
 input {
   width: 100%;
@@ -260,10 +265,15 @@ input:focus {
 }
 
 .sso-icon {
-  background: #f1f5f9;
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 1.1rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .sso-text strong {
@@ -297,42 +307,68 @@ input:focus {
 /* --- FOOTER --- */
 .login-footer {
   width: 100%;
-  padding: 1.5rem 2rem;
+  padding: 2rem;
   border-top: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
   background-color: #f8fafc;
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 2fr;
+  gap: 2rem;
 }
 
-.footer-left strong {
+.footer-brand strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: #0f172a;
-  margin-bottom: 4px;
+  margin-bottom: 0.35rem;
 }
-
-.footer-left p {
+.footer-brand p {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: #64748b;
+  line-height: 1.5;
+}
+.footer-copy {
+  margin-top: 0.65rem !important;
+  font-size: 0.72rem !important;
+  color: #94a3b8 !important;
 }
 
-.footer-right {
-  display: flex;
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
 }
-
-.footer-right a {
-  font-size: 0.75rem;
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.footer-col h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+.footer-col a {
+  font-size: 0.8rem;
   color: #64748b;
   text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-col a:hover {
+  color: #0f172a;
 }
 
-.footer-right a:hover {
-  color: #0f172a;
-  text-decoration: underline;
+@media (max-width: 800px) {
+  .login-footer {
+    grid-template-columns: 1fr;
+  }
+  .footer-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Responsive */

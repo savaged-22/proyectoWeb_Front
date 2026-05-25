@@ -41,4 +41,8 @@ export class SuperadminService {
     return this.http.request<{ mensaje: string }>('delete',
       `${this.base}/empresas/${empresaId}`, { body: { confirmNombre } });
   }
+
+  metricas(): Observable<Record<string, any>> {
+    return this.http.get<Record<string, any>>(`${this.base}/metricas`);
+  }
 }

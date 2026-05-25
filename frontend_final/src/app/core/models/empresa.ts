@@ -16,6 +16,8 @@ export interface UsuarioBasico {
   estado: string;
   rolPrincipal: string;
   createdAt: string;
+  /** True para SUPERADMIN o admin original de la empresa. */
+  protegido?: boolean;
 }
 
 export interface EmpresaDetail {

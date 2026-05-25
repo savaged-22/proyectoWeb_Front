@@ -1,0 +1,99 @@
+.lm-page { width: 100%; }
+
+.lm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.lm-head h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+.lm-head p { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+.lm-refresh {
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #334155;
+}
+.lm-refresh:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.lm-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lm-state {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.lm-error { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+
+.lm-section-title {
+  margin: 1.75rem 0 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.lm-section-title:first-of-type { margin-top: 0; }
+
+.lm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.lm-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.lm-card.lm-card-primary { border-left: 3px solid #0052cc; }
+.lm-card.lm-card-status  { border-left: 3px solid #16a34a; }
+
+.lm-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.lm-val {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.lm-val.lm-status-ok { color: #15803d; font-size: 1.2rem; letter-spacing: 0.05em; }
+.lm-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+.lm-ts {
+  margin-top: 1.5rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-align: right;
+}

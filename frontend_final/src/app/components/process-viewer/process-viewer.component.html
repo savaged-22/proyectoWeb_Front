@@ -1,7 +1,6 @@
 <div class="pv-wrap" [style.height]="height">
   <div class="pv-toolbar" *ngIf="!error && procesoActual">
     <div class="pv-title">
-      <span class="pv-icon">👁️</span>
       <strong>{{ procesoActual.nombre }}</strong>
       <span class="pv-meta">{{ procesoActual.categoria || '—' }} · {{ procesoActual.estado }}</span>
     </div>
