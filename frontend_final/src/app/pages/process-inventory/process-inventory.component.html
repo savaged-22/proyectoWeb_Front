@@ -1,19 +1,23 @@
 <header class="page-header">
   <div>
-    <h1>Procesos
-      <span *ngIf="isLuloInternal" class="readonly-badge">SOLO LECTURA · Soporte</span>
+    <h1>Processes
+      <span *ngIf="isLuloInternal" class="readonly-badge">READ-ONLY · Support</span>
     </h1>
     <p class="subtitle">
       <ng-container *ngIf="!isLuloInternal">
         Manage and configure operational workflows for the enterprise core.
       </ng-container>
       <ng-container *ngIf="isLuloInternal">
-        Vista de soporte: puedes consultar los procesos de los clientes pero no modificarlos.
+        Support view: inspect client processes (no edit).
       </ng-container>
     </p>
   </div>
-  <div class="actions" style="display: flex; gap: 0.5rem;" *ngIf="!isLuloInternal">
-    <button class="btn btn-outline">Import</button>
+  <div class="actions" style="display: flex; gap: 0.5rem;" *ngIf="!isLuloInternal && puedeCrear">
+    <button class="btn btn-outline" (click)="fileInput.click()" [disabled]="importing">
+      {{ importing ? 'Importing…' : 'Import' }}
+    </button>
+    <input #fileInput type="file" accept=".bpmn,.xml" style="display:none"
+           (change)="onImportFile($event)">
     <a routerLink="/app/processes/new" [queryParams]="{isTemplate: true}" class="btn btn-primary" style="background-color: #6366f1; border-color: #6366f1;">+ Create New Design</a>
     <a routerLink="/app/processes/new" class="btn btn-primary">+ Create New Process</a>
   </div>
@@ -22,7 +26,7 @@
 <!-- KPIs -->
 <div class="kpi-grid">
   <div class="kpi-card">
-    <div class="kpi-label">Total Procesos</div>
+    <div class="kpi-label">Total Processes</div>
     <div class="kpi-value">{{ total }}</div>
     <div class="kpi-trend muted">↑ Live count</div>
   </div>
@@ -85,11 +89,7 @@
 
   <ng-container *ngIf="!loading && !error">
     <div *ngIf="procesos.length === 0" class="state">
-      <div style="font-size:2rem; margin-bottom:0.5rem;">📋</div>
-      No hay procesos registrados aún.
-      <div class="mt-1">
-        <a routerLink="/app/processes/new" class="btn btn-primary btn-sm">Create your first process</a>
-      </div>
+      No processes yet.
     </div>
 
     <!-- Seccion de Templates -->

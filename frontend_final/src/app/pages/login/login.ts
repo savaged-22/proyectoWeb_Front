@@ -23,6 +23,11 @@ export class LoginPage {
 
   errorMessage = '';
   isLoading = false;
+  showPassword = false;
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
 
   onSubmit() {
     if (this.loginForm.valid) {

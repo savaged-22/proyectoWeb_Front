@@ -333,9 +333,14 @@ export class PermissionsComponent implements OnInit {
   };
 
   /** Devuelve solo las secciones con permisos disponibles en el pool actual. */
+  private _gruposPermisoCache: { label: string; icono: string; permisos: Permiso[] }[] = [];
+  private _gruposPermisoCacheKey = '';
+
   get gruposPermiso(): { label: string; icono: string; permisos: Permiso[] }[] {
+    const key = this.catalogoPermisos.map((p) => p.codigo).join('|');
+    if (key === this._gruposPermisoCacheKey) return this._gruposPermisoCache;
     const disponibles = new Set(this.catalogoPermisos.map((p) => p.codigo));
-    return PermissionsComponent.SECCIONES
+    this._gruposPermisoCache = PermissionsComponent.SECCIONES
       .map((s) => ({
         label: s.label,
         icono: s.icono,
@@ -345,7 +350,12 @@ export class PermissionsComponent implements OnInit {
           .filter(Boolean),
       }))
       .filter((g) => g.permisos.length > 0);
+    this._gruposPermisoCacheKey = key;
+    return this._gruposPermisoCache;
   }
+
+  trackByLabel(_: number, g: { label: string }): string { return g.label; }
+  trackByCodigo(_: number, p: Permiso): string { return p.codigo; }
 
   iconoPermiso(codigo: string): string {
     const partes = codigo.split('_');
@@ -393,10 +403,15 @@ export class PermissionsComponent implements OnInit {
       next: (nuevoRol) => {
         this.modalLoading = false;
         this.cerrarModal();
+        if (!this.roles.some((r) => r.id === nuevoRol.id)) {
+          this.roles = [...this.roles, nuevoRol];
+        }
+        this.selectRole(nuevoRol);
         this.rolPoolService.listar(this.selectedPool!.id).subscribe({
           next: (rs) => {
             this.roles = rs;
-            this.selectRole(nuevoRol);
+            const match = rs.find((r) => r.id === nuevoRol.id);
+            if (match) this.selectRole(match);
           },
         });
       },

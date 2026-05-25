@@ -9,6 +9,10 @@ import { EmpresaService } from '../../services/empresa.service';
 import { SuperadminService } from '../../services/superadmin.service';
 import { AuthService } from '../../services/auth.service';
 import { RolPoolService } from '../../services/rol-pool.service';
+import { PoolService } from '../../services/pool.service';
+import { ProcesoService } from '../../services/proceso.service';
+import { Proceso } from '../../models/proceso/proceso.model';
+import { Pool } from '../../core/models/pool';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -22,8 +26,14 @@ export class UserDashboardComponent implements OnInit {
   private empresaService = inject(EmpresaService);
   private superadminService = inject(SuperadminService);
   private rolPoolService = inject(RolPoolService);
+  private poolService = inject(PoolService);
+  private procesoService = inject(ProcesoService);
   private auth = inject(AuthService);
   private http = inject(HttpClient);
+
+  poolsList: Pool[] = [];
+  diagramasRecientes: Proceso[] = [];
+  loadingDiagramas = false;
 
   empresa?: EmpresaDetail;
   loading = true;
@@ -104,6 +114,24 @@ export class UserDashboardComponent implements OnInit {
         this.loading = false;
       },
     });
+
+    if (this.auth.isSuperadmin() || this.auth.can('POOL_ADMINISTRAR') || this.auth.can('PROCESO_VER')) {
+      this.poolService.listar().subscribe({
+        next: (list) => { this.poolsList = list; },
+        error: () => { this.poolsList = []; },
+      });
+    }
+
+    if (this.puedeVerDiagramas) {
+      this.loadingDiagramas = true;
+      this.procesoService.listar({ size: 5 }).subscribe({
+        next: (page) => {
+          this.diagramasRecientes = (page.content || []).slice(0, 5);
+          this.loadingDiagramas = false;
+        },
+        error: () => { this.loadingDiagramas = false; },
+      });
+    }
   }
 
   // ── Getters para vista Lulo ────────────────────────────────────────
@@ -138,6 +166,17 @@ export class UserDashboardComponent implements OnInit {
   get puedeVerSoporte(): boolean {
     return this.esSuperadmin || this.auth.can('SOPORTE_PROCESOS_VER');
   }
+
+  // ── Client (empresa cliente) capabilities ───────────────────────────
+  get puedeVerProcesos(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_VER'); }
+  get puedeCrearProceso(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_CREAR'); }
+  get puedeVerUsuariosEmpresa(): boolean { return this.esSuperadmin || this.auth.can('USUARIO_VER'); }
+  get puedeVerRolesEmpresa(): boolean { return this.esSuperadmin || this.auth.can('ROL_VER'); }
+  get puedeAdministrarPools(): boolean { return this.esSuperadmin || this.auth.can('POOL_ADMINISTRAR'); }
+  get puedeVerMonitoring(): boolean { return this.esSuperadmin || this.auth.can('USUARIO_VER') || this.auth.can('METRICAS_VER') || this.auth.can('AUDIT_VER'); }
+  get puedeVerDiagramas(): boolean { return this.esSuperadmin || this.auth.can('DIAGRAMA_VER') || this.auth.can('DIAGRAMA_EDITAR'); }
+  get puedeCrearDiagrama(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_CREAR'); }
+  get puedeEditarDiagrama(): boolean { return this.esSuperadmin || this.auth.can('DIAGRAMA_EDITAR') || this.auth.can('PROCESO_EDITAR'); }
 
   /**
    * Rol bonito para mostrar en saludo. "SuperAdmin" / "Gestor de Empresas" /

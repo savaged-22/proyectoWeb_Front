@@ -33,6 +33,7 @@ export class UserManagementComponent implements OnInit {
   searchQuery = '';
 
   newUserEmail = '';
+  newUserEmailLocal = '';
   newUserPassword = '';
   newUserRolPoolId = '';
   showNewUserPassword = false;
@@ -209,15 +210,26 @@ export class UserManagementComponent implements OnInit {
     return adminMail.includes('@') ? adminMail.split('@')[1] : '';
   }
 
+  setNewUserEmailLocal(value: string): void {
+    this.newUserEmailLocal = (value || '').toLowerCase().replace(/[^a-z0-9._\-+]/g, '');
+    const dom = this.dominioRequerido;
+    this.newUserEmail = this.newUserEmailLocal && dom
+      ? `${this.newUserEmailLocal}@${dom.toLowerCase()}`
+      : '';
+  }
+
   createUser(): void {
     const session = this.auth.getSession();
+    const dom = this.dominioRequerido;
+    this.newUserEmail = this.newUserEmailLocal && dom
+      ? `${this.newUserEmailLocal}@${dom.toLowerCase()}`
+      : this.newUserEmail;
     if (!session || !this.newUserEmail || !this.newUserPassword || !this.newUserRolPoolId) return;
     if (this.newUserPassword.length < 8) {
       this.userStatus = 'La contraseña debe tener al menos 8 caracteres.';
       this.userStatusError = true;
       return;
     }
-    const dom = this.dominioRequerido;
     if (dom && !this.newUserEmail.toLowerCase().endsWith('@' + dom.toLowerCase())) {
       this.userStatus = `El correo debe terminar en @${dom}`;
       this.userStatusError = true;
@@ -237,6 +249,7 @@ export class UserManagementComponent implements OnInit {
         this.userStatus = `${res.email} · ${res.rolAsignado}`;
         this.userStatusError = false;
         this.newUserEmail = '';
+        this.newUserEmailLocal = '';
         this.newUserPassword = '';
         this.newUserRolPoolId = this.roles.length > 0 ? this.roles[0].id : '';
         this.creating = false;

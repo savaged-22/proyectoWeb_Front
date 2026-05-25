@@ -72,6 +72,42 @@
 }
 .password-toggle:hover { color: var(--color-primary); }
 
+.email-inline {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.email-inline input {
+  border: none !important;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  font: inherit;
+  border-radius: 0;
+}
+.email-inline:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(2, 101, 220, 0.15);
+}
+.email-inline .email-suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  color: #475569;
+  font-size: 0.88rem;
+  background: #f8fafc;
+  border-left: 1px solid #e2e8f0;
+  white-space: nowrap;
+  user-select: none;
+}
+.email-inline.no-domain .email-suffix { display: none; }
+
 /* ── Modal editar usuario ── */
 .modal-overlay {
   position: fixed;

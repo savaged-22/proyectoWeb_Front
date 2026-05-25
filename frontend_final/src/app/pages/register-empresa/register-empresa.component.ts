@@ -47,6 +47,15 @@ export class RegisterEmpresaPage {
     return !!d && !!e && e.endsWith('@' + d);
   }
 
+  blockNitChar(e: KeyboardEvent): void {
+    if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault();
+  }
+
+  setNit(value: string): void {
+    const digits = (value || '').replace(/\D/g, '').slice(0, 10);
+    this.form.nit = digits.length <= 9 ? digits : `${digits.slice(0, 9)}-${digits.slice(9)}`;
+  }
+
   sugerirEmail(): void {
     if (this.form.dominio && !this.form.emailAdmin) {
       this.form.emailAdmin = 'admin@' + this.form.dominio.toLowerCase().trim();
@@ -58,6 +67,11 @@ export class RegisterEmpresaPage {
     if (!f.nombreEmpresa.trim() || !f.nit.trim() || !f.dominio.trim()
         || !f.emailAdmin.trim() || !f.password.trim()) {
       this.error.set('Please fill in all required fields.');
+      return;
+    }
+    const nit = f.nit.trim();
+    if (!/^\d{9}-\d$/.test(nit)) {
+      this.error.set('Tax ID must have 9 digits, hyphen, and verification digit.');
       return;
     }
     if (!this.emailValido()) {

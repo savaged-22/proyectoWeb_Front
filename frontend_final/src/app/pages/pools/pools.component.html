@@ -1,0 +1,131 @@
+<header class="page-header">
+  <div>
+    <h1>Pools</h1>
+    <p class="subtitle">Logical containers grouping processes and their roles.</p>
+  </div>
+  <div class="actions" *ngIf="puedeCrear">
+    <button class="btn btn-primary" (click)="abrirCrear()">+ New pool</button>
+  </div>
+</header>
+
+<div *ngIf="loading" class="state">Loading pools…</div>
+<div *ngIf="!loading && error" class="state error">{{ error }}</div>
+<div *ngIf="!loading && !error && pools.length === 0" class="state">
+  No pools yet.
+</div>
+
+<div class="pools-grid" *ngIf="!loading && !error && pools.length > 0">
+  <div class="pool-card" *ngFor="let p of pools"
+       [class.selected]="selectedPool?.id === p.id"
+       (click)="seleccionarPool(p)">
+    <div class="pool-card-head">
+      <div class="pool-card-icon">
+        <app-icon name="cog"></app-icon>
+      </div>
+      <div class="pool-card-title">
+        <strong>{{ p.nombre }}</strong>
+        <span>{{ p.empresaNombre }}</span>
+      </div>
+    </div>
+
+    <div class="pool-card-stats">
+      <div *ngIf="puedeVerRoles">
+        <span class="ss-label">Roles</span>
+        <span class="ss-value">
+          {{ p.loadingRoles ? '…' : (p.totalRoles ?? 0) }}
+        </span>
+      </div>
+      <div>
+        <span class="ss-label">Created</span>
+        <span class="ss-value">{{ p.createdAt | date:'mediumDate' }}</span>
+      </div>
+    </div>
+
+    <div class="pool-card-roles" *ngIf="puedeVerRoles && !p.loadingRoles && (p.rolesPreview?.length ?? 0) > 0">
+      <span class="ss-label">Top roles</span>
+      <div class="role-chips">
+        <span class="role-chip" *ngFor="let r of p.rolesPreview" [class.owner]="r.esPropietario">
+          {{ r.nombre }}
+        </span>
+      </div>
+    </div>
+
+    <div class="pool-card-meta">
+      <code class="pool-id">{{ p.id }}</code>
+    </div>
+
+    <div class="pool-card-actions">
+      <button type="button" class="btn btn-outline btn-sm"
+              (click)="seleccionarPool(p); $event.stopPropagation()">View details</button>
+      <a *ngIf="puedeVerRoles" [routerLink]="['/app/permissions']" (click)="$event.stopPropagation()" class="btn btn-outline btn-sm">Manage roles</a>
+      <a *ngIf="puedeVerProcesos" [routerLink]="['/app/processes']" (click)="$event.stopPropagation()" class="btn btn-outline btn-sm">View processes</a>
+    </div>
+  </div>
+</div>
+
+<!-- Pool details drawer -->
+<div class="pool-detail-overlay" *ngIf="selectedPool as sp" (click)="cerrarDetalle()">
+  <aside class="pool-detail" (click)="$event.stopPropagation()">
+    <header class="pd-head">
+      <div class="pd-icon">
+        <app-icon name="cog"></app-icon>
+      </div>
+      <div class="pd-title">
+        <strong>{{ sp.nombre }}</strong>
+        <span>{{ sp.empresaNombre }}</span>
+      </div>
+      <button type="button" class="pd-close" (click)="cerrarDetalle()" aria-label="Close">×</button>
+    </header>
+
+    <section class="pd-section">
+      <h4>Details</h4>
+      <dl class="pd-grid">
+        <dt>Name</dt><dd>{{ sp.nombre }}</dd>
+        <dt>Company</dt><dd>{{ sp.empresaNombre }}</dd>
+        <dt>Created</dt><dd>{{ sp.createdAt | date:'medium' }}</dd>
+        <dt>Pool ID</dt><dd><code class="pool-id">{{ sp.id }}</code></dd>
+      </dl>
+    </section>
+
+    <section class="pd-section" *ngIf="puedeVerRoles">
+      <h4>Roles in this pool</h4>
+      <div *ngIf="sp.loadingRoles" class="state">Loading roles…</div>
+      <div *ngIf="!sp.loadingRoles && (sp.totalRoles ?? 0) === 0" class="state">No roles configured.</div>
+      <ul class="pd-roles" *ngIf="!sp.loadingRoles && (sp.totalRoles ?? 0) > 0">
+        <li *ngFor="let r of sp.rolesPreview">
+          <span class="role-chip" [class.owner]="r.esPropietario">{{ r.nombre }}</span>
+          <span class="pd-role-meta">{{ r.permisos.length }} permissions</span>
+        </li>
+      </ul>
+      <a *ngIf="(sp.totalRoles ?? 0) > (sp.rolesPreview?.length ?? 0)"
+         routerLink="/app/permissions" class="hint">Manage all roles →</a>
+    </section>
+
+    <section class="pd-section" *ngIf="sp.configJson">
+      <h4>Configuration</h4>
+      <pre class="pd-json">{{ sp.configJson }}</pre>
+    </section>
+  </aside>
+</div>
+
+<!-- Create modal -->
+<div class="modal-overlay" *ngIf="showCreate" (click)="cerrarCrear()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <h2>New pool</h2>
+    <p class="hint">Pools group processes and their roles.</p>
+
+    <label class="full">
+      <span>Pool name *</span>
+      <input type="text" [(ngModel)]="newPoolName" name="newPoolName" maxlength="80" required>
+    </label>
+
+    <p *ngIf="createError" class="msg-error">{{ createError }}</p>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" (click)="cerrarCrear()" [disabled]="creating">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="crear()" [disabled]="creating">
+        {{ creating ? 'Creating…' : 'Create pool' }}
+      </button>
+    </div>
+  </div>
+</div>

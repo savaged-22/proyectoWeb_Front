@@ -32,6 +32,7 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
   procesoActual: ProcesoDetalle | null = null;
   isLoadingProcess = false;
   isImporting = false;
+  fromImport = false;
 
   // Selección actual para el panel de propiedades
   selectedElement: any = null;
@@ -84,6 +85,7 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.procesoId = params['id'];
+      this.fromImport = params['import'] === '1';
       if (this.procesoId) {
         this.cargarDatosProceso(this.procesoId);
       }
@@ -292,8 +294,17 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
   renderizarXML() {
     if (!this.bpmnModeler) return;
 
+    const pendingImport = this.fromImport && this.procesoId
+      && sessionStorage.getItem('lulo:importProcesoId') === this.procesoId
+      ? sessionStorage.getItem('lulo:importXml')
+      : null;
+
     let xml = '';
-    if (this.procesoActual && this.procesoActual.nodos && this.procesoActual.nodos.length > 0) {
+    let persistImported = false;
+    if (pendingImport) {
+      xml = pendingImport;
+      persistImported = true;
+    } else if (this.procesoActual && this.procesoActual.nodos && this.procesoActual.nodos.length > 0) {
       xml = this.bpmnMapper.buildXmlFromModel(this.procesoActual);
     } else {
       xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -311,10 +322,32 @@ export class ProcessBuilderComponent implements OnInit, AfterViewInit {
     this.bpmnModeler.importXML(xml).then(() => {
       console.log('Diagram loaded successfully');
       this.isImporting = false;
+      if (persistImported) {
+        sessionStorage.removeItem('lulo:importXml');
+        sessionStorage.removeItem('lulo:importProcesoId');
+        this.fromImport = false;
+        this.replayShapesForPersistence();
+      }
     }).catch((err: any) => {
       console.error('Error loading diagram', err);
       this.isImporting = false;
     });
+  }
+
+  private replayShapesForPersistence(): void {
+    try {
+      const elementRegistry = this.bpmnModeler.get('elementRegistry');
+      const eventBus = this.bpmnModeler.get('eventBus');
+      const all = elementRegistry.getAll();
+      for (const el of all) {
+        if (!el || el.type === 'bpmn:Process' || el.type === 'label') continue;
+        const isShape = el.waypoints === undefined;
+        const eventName = isShape ? 'shape.added' : 'connection.added';
+        eventBus.fire(eventName, { element: el });
+      }
+    } catch (e) {
+      console.error('replay shapes failed', e);
+    }
   }
 
   toggleProperties() {

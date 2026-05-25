@@ -14,21 +14,6 @@
   </div>
 </header>
 
-<!-- Pool selector: only shown when there is more than one pool -->
-<div class="panel mb-2" *ngIf="pools.length > 1">
-  <div class="panel-header">
-    <div class="panel-title">Pool</div>
-  </div>
-  <div class="pool-tabs">
-    <button
-      *ngFor="let p of pools"
-      [class.active]="selectedPool?.id === p.id"
-      (click)="selectPool(p)"
-    >
-      {{ p.nombre }}
-    </button>
-  </div>
-</div>
 
 <ng-container *ngIf="loading">
   <div class="state">
@@ -65,7 +50,7 @@
   <div class="split">
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">Pool roles</div>
+        <div class="panel-title">Roles</div>
       </div>
       <div class="role-list">
         <div
@@ -171,7 +156,7 @@
 
 <ng-container *ngIf="!loading && roles.length === 0 && !error">
   <div class="state">
-    You don't have pools with roles configured yet.
+    No roles configured yet.
   </div>
 </ng-container>
 
@@ -213,7 +198,7 @@
         </div>
 
         <div class="permiso-grupos">
-          <div class="permiso-grupo" *ngFor="let g of gruposPermiso">
+          <div class="permiso-grupo" *ngFor="let g of gruposPermiso; trackBy: trackByLabel">
             <div class="grupo-head">
               <span class="grupo-titulo">
                 <app-icon [name]="g.icono"></app-icon> {{ g.label }}
@@ -222,7 +207,7 @@
                 type="button"
                 class="grupo-toggle"
                 [class.active]="estadoGrupo(g.permisos) !== 'none'"
-                (click)="toggleGrupo(g.permisos)"
+                (click)="toggleGrupo(g.permisos); $event.preventDefault()"
               >
                 {{ estadoGrupo(g.permisos) === 'all' ? 'Unselect all' : 'Select all' }}
               </button>
@@ -231,9 +216,9 @@
               <button
                 type="button"
                 class="permiso-card"
-                *ngFor="let p of g.permisos"
+                *ngFor="let p of g.permisos; trackBy: trackByCodigo"
                 [class.selected]="modalPermisos.has(p.codigo)"
-                (click)="togglePermiso(p.codigo)"
+                (click)="togglePermiso(p.codigo); $event.preventDefault()"
                 [title]="p.descripcion"
               >
                 <span class="permiso-card-icon">

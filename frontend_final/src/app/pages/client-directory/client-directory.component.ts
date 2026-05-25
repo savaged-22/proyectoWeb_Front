@@ -51,7 +51,10 @@ export class ClientDirectoryComponent implements OnInit {
 
   // form crear
   formCrear: RegistroEmpresaRequest = this.emptyCrear();
+  emailLocal = '';
   showPassword = false;
+
+  togglePassword(): void { this.showPassword = !this.showPassword; }
 
   // form editar
   formEditar: EditarEmpresaRequest = {};
@@ -82,6 +85,8 @@ export class ClientDirectoryComponent implements OnInit {
     this.modal = 'crear';
     this.modalEmpresa = null;
     this.formCrear = this.emptyCrear();
+    this.emailLocal = '';
+    this.showPassword = false;
     this.error = ''; this.ok = '';
   }
 
@@ -114,20 +119,23 @@ export class ClientDirectoryComponent implements OnInit {
   // ── Crear ─────────────────────────────────────────────────────────────
   submitCrear(): void {
     const f = this.formCrear;
-    if (!f.nombreEmpresa.trim() || !f.nit.trim() || !f.dominio.trim() ||
-        !f.emailAdmin.trim() || !f.password.trim()) {
+    const dominio = (f.dominio || '').toLowerCase().trim();
+    f.emailAdmin = this.emailLocal && dominio ? `${this.emailLocal}@${dominio}` : '';
+    if (!f.nombreEmpresa.trim() || !f.nit.trim() || !dominio ||
+        !this.emailLocal.trim() || !f.password.trim()) {
       this.error = 'Completa los campos obligatorios.';
       return;
     }
-    if (!this.emailEnDominio(f.emailAdmin, f.dominio)) {
-      this.error = `El correo del admin debe terminar en @${f.dominio}`;
+    const nit = f.nit.trim();
+    if (!/^\d{9}-\d$/.test(nit)) {
+      this.error = 'Tax ID must have 9 digits, hyphen, and verification digit.';
       return;
     }
     this.busy = true; this.error = '';
     const body: RegistroEmpresaRequest = {
       ...f,
-      dominio: f.dominio.toLowerCase().trim(),
-      emailContacto: f.emailContacto || f.emailAdmin,
+      dominio,
+      emailContacto: f.emailAdmin,
     };
     this.superadmin.crearEmpresa(body).subscribe({
       next: () => {
@@ -282,6 +290,24 @@ export class ClientDirectoryComponent implements OnInit {
   }
 
   /** Sugerencia de email admin a partir del dominio. */
+  blockNitChar(e: KeyboardEvent): void {
+    if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault();
+  }
+
+  setNit(value: string): void {
+    const digits = (value || '').replace(/\D/g, '').slice(0, 10);
+    this.formCrear.nit = digits.length <= 9 ? digits : `${digits.slice(0, 9)}-${digits.slice(9)}`;
+  }
+
+  setNombreEmpresa(value: string): void {
+    const v = value || '';
+    this.formCrear.nombreEmpresa = v ? v.charAt(0).toUpperCase() + v.slice(1) : '';
+  }
+
+  setEmailLocal(value: string): void {
+    this.emailLocal = (value || '').toLowerCase().replace(/[^a-z0-9._\-+]/g, '');
+  }
+
   sugerirEmail(): void {
     if (this.formCrear.dominio && !this.formCrear.emailAdmin) {
       this.formCrear.emailAdmin = `admin@${this.formCrear.dominio.toLowerCase().trim()}`;

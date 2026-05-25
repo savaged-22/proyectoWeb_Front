@@ -13,6 +13,7 @@ import { UserDashboardComponent } from './pages/user-dashboard/user-dashboard';
 import { MonitoringComponent } from './pages/monitoring/monitoring.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { PermissionsComponent } from './pages/permissions/permissions.component';
+import { PoolsComponent } from './pages/pools/pools.component';
 import { ProcessInventoryComponent } from './pages/process-inventory/process-inventory.component';
 import { ProcessNewComponent } from './pages/process-new/process-new.component';
 import { ClientDirectoryComponent } from './pages/client-directory/client-directory.component';
@@ -43,6 +44,8 @@ export const routes: Routes = [
         canActivate: [permisoGuard('USUARIO_VER', 'LULO_USUARIO_VER')] },
       { path: 'permissions',      component: PermissionsComponent,
         canActivate: [permisoGuard('ROL_VER', 'LULO_ROL_GESTIONAR')] },
+      { path: 'pools',            component: PoolsComponent,
+        canActivate: [permisoGuard('POOL_ADMINISTRAR')] },
       { path: 'processes',        component: ProcessInventoryComponent,
         canActivate: [permisoGuard('PROCESO_VER')] },
       { path: 'processes/new',    component: ProcessNewComponent,

@@ -184,27 +184,103 @@
 </ng-container>
 
 <ng-container *ngIf="!isLuloInternal && empresa as e">
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Active processes</div>
-      <div class="kpi-value">{{ e.totalProcesos }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total users</div>
-      <div class="kpi-value">{{ e.totalUsuarios }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total pools</div>
-      <div class="kpi-value">{{ e.totalPools }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Roles configured</div>
-      <div class="kpi-value">{{ e.totalRolesPool }}</div>
-    </div>
-  </div>
+  <div class="lulo-grid">
+   <div class="lulo-col-left">
 
-  <div class="dash-grid">
-    <div class="panel">
+    <section class="panel" *ngIf="puedeVerProcesos">
+      <div class="panel-header">
+        <strong>Processes overview</strong>
+        <a routerLink="/app/processes" class="hint">Go to processes →</a>
+      </div>
+      <div class="pool-row">
+        <div class="pool-chips">
+          <a class="pool-chip" *ngFor="let d of diagramasRecientes"
+             [routerLink]="['/app/process-builder']" [queryParams]="{ id: d.id }">{{ d.nombre }}</a>
+          <span class="state" *ngIf="!loadingDiagramas && diagramasRecientes.length === 0">No processes yet.</span>
+          <span class="state" *ngIf="loadingDiagramas">Loading…</span>
+        </div>
+        <div class="mini-stat pool-total">
+          <span class="mini-label">Total</span>
+          <span class="mini-value">{{ e.totalProcesos }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="puedeAdministrarPools">
+      <div class="panel-header">
+        <strong>Pool administration</strong>
+        <a routerLink="/app/pools" class="hint">Manage →</a>
+      </div>
+      <div class="pool-row">
+        <div class="pool-chips">
+          <a class="pool-chip" *ngFor="let p of poolsList"
+             [routerLink]="['/app/pools']" [queryParams]="{ id: p.id }">{{ p.nombre }}</a>
+          <span class="state" *ngIf="poolsList.length === 0">No pools yet.</span>
+        </div>
+        <div class="mini-stat pool-total">
+          <span class="mini-label">Total</span>
+          <span class="mini-value">{{ poolsList.length || e.totalPools }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="puedeVerDiagramas && !puedeVerProcesos">
+      <div class="panel-header">
+        <strong>Diagrams</strong>
+        <a routerLink="/app/processes" class="hint">View all →</a>
+      </div>
+      <p class="subtitle" style="font-size:0.78rem; margin: 0 0 0.65rem; color:#64748b;">
+        Process diagrams you can view {{ puedeEditarDiagrama ? 'or edit' : '' }}.
+      </p>
+
+      <div class="diagram-actions" *ngIf="puedeCrearDiagrama">
+        <a routerLink="/app/processes/new" [queryParams]="{ isTemplate: true }"
+           class="btn btn-primary btn-sm">+ New design</a>
+        <a routerLink="/app/processes/new" class="btn btn-outline btn-sm">+ New process</a>
+      </div>
+
+      <div *ngIf="loadingDiagramas" class="state">Loading diagrams…</div>
+      <div *ngIf="!loadingDiagramas && diagramasRecientes.length === 0" class="state">No diagrams yet.</div>
+
+      <ul class="diagram-list" *ngIf="!loadingDiagramas && diagramasRecientes.length > 0">
+        <li *ngFor="let d of diagramasRecientes">
+          <span class="diag-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          </span>
+          <span class="diag-text">
+            <strong>{{ d.nombre }}</strong>
+            <span>{{ d.esPlantilla ? 'Design' : 'Process' }} · {{ d.estado | uppercase }}</span>
+          </span>
+          <a class="btn btn-outline btn-sm"
+             [routerLink]="['/app/process-builder']" [queryParams]="{ id: d.id }">
+            {{ puedeEditarDiagrama ? 'Edit' : 'View' }}
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel" *ngIf="puedeVerMonitoring">
+      <div class="panel-header">
+        <strong>Monitoring summary</strong>
+        <a routerLink="/app/monitoring" class="hint">Open monitoring →</a>
+      </div>
+      <div class="kpi-grid" style="margin-top: 0.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">System uptime</div>
+          <div class="kpi-value">99.99%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active users</div>
+          <div class="kpi-value">{{ e.totalUsuarios }}</div>
+        </div>
+        <div class="kpi-card" *ngIf="puedeVerProcesos">
+          <div class="kpi-label">Running processes</div>
+          <div class="kpi-value">{{ e.totalProcesos }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="puedeVerUsuariosEmpresa">
       <div class="panel-header">
         <div class="panel-title">Company team</div>
         <a routerLink="/app/users" class="manage-link">Manage users →</a>
@@ -236,7 +312,58 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </section>
+
+   </div>
+
+   <aside class="lulo-col-right">
+    <section class="panel">
+      <div class="panel-header"><strong>Quick access</strong></div>
+      <div class="lulo-quick">
+        <a *ngIf="puedeVerProcesos" routerLink="/app/processes" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="11" r="3"></circle></svg>
+          </span>
+          <span class="lq-text"><strong>Processes</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+        <a *ngIf="puedeVerDiagramas && !puedeVerProcesos" routerLink="/app/processes" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          </span>
+          <span class="lq-text"><strong>Diagrams</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+        <a *ngIf="puedeVerUsuariosEmpresa" routerLink="/app/users" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </span>
+          <span class="lq-text"><strong>Users</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+        <a *ngIf="puedeAdministrarPools" routerLink="/app/pools" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          </span>
+          <span class="lq-text"><strong>Pools</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+        <a *ngIf="puedeVerRolesEmpresa" routerLink="/app/permissions" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </span>
+          <span class="lq-text"><strong>Roles &amp; Permissions</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+        <a *ngIf="puedeVerMonitoring" routerLink="/app/monitoring" class="lulo-quick-card">
+          <span class="lq-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          </span>
+          <span class="lq-text"><strong>Monitoring</strong></span>
+          <span class="lq-arrow">→</span>
+        </a>
+      </div>
+    </section>
 
     <div class="panel company-card">
       <strong style="font-size:1.1rem">{{ e.nombre }}</strong>
@@ -267,9 +394,7 @@
         <div class="bar"><div class="fill" [style.width.%]="(e.totalUsuarios / 50000) * 100"></div></div>
       </div>
 
-      <a [routerLink]="['/app/clients', e.id]" class="btn btn-outline w-full" style="background:#fff; margin-top:1rem">
-        Manage company profile
-      </a>
     </div>
+   </aside>
   </div>
 </ng-container>

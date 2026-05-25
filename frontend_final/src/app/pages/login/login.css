@@ -191,6 +191,26 @@ label {
 }
 .input-container .icon svg { display: block; }
 
+.pass-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.pass-toggle:hover { color: #0265dc; background: rgba(2, 101, 220, 0.08); }
+.pass-toggle:focus-visible { outline: 2px solid #0265dc; outline-offset: 1px; }
+.input-container:has(.pass-toggle) input { padding-right: 2.5rem; }
+
 input {
   width: 100%;
   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
