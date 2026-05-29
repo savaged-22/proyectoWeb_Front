@@ -2,9 +2,18 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
-import { EmpresaDetail } from '../../core/models/empresa';
+import { HttpClient } from '@angular/common/http';
+
+import { EmpresaDetail, EmpresaListItem } from '../../core/models/empresa';
 import { EmpresaService } from '../../services/empresa.service';
+import { SuperadminService } from '../../services/superadmin.service';
 import { AuthService } from '../../services/auth.service';
+import { RolPoolService } from '../../services/rol-pool.service';
+import { PoolService } from '../../services/pool.service';
+import { ProcesoService } from '../../services/proceso.service';
+import { Proceso } from '../../models/proceso/proceso.model';
+import { Pool } from '../../core/models/pool';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-user-dashboard',
@@ -15,7 +24,16 @@ import { AuthService } from '../../services/auth.service';
 })
 export class UserDashboardComponent implements OnInit {
   private empresaService = inject(EmpresaService);
+  private superadminService = inject(SuperadminService);
+  private rolPoolService = inject(RolPoolService);
+  private poolService = inject(PoolService);
+  private procesoService = inject(ProcesoService);
   private auth = inject(AuthService);
+  private http = inject(HttpClient);
+
+  poolsList: Pool[] = [];
+  diagramasRecientes: Proceso[] = [];
+  loadingDiagramas = false;
 
   empresa?: EmpresaDetail;
   loading = true;
@@ -23,6 +41,16 @@ export class UserDashboardComponent implements OnInit {
 
   email = '';
   empresaNombre = '';
+
+  // Dashboard Lulo: stats globales
+  isLuloInternal = false;
+  empresasCliente: EmpresaListItem[] = [];
+  loadingEmpresas = false;
+
+  // Stats internas Lulo (para usuarios sin EMPRESA_VER)
+  totalUsuariosLulo = 0;
+  totalRolesLulo = 0;
+  ultimosUsuariosLulo: { email: string; estado: string }[] = [];
 
   ngOnInit(): void {
     const session = this.auth.getSession();
@@ -33,6 +61,48 @@ export class UserDashboardComponent implements OnInit {
     }
     this.email = session.email;
     this.empresaNombre = session.empresaNombre;
+    this.isLuloInternal = this.auth.isLuloInternal();
+
+    if (this.isLuloInternal) {
+      this.loadingEmpresas = true;
+
+      // Lista empresas solo si tiene permiso (no rebota 403).
+      if (this.auth.isSuperadmin() || this.auth.can('EMPRESA_VER')) {
+        this.superadminService.listarEmpresas().subscribe({
+          next: (list) => { this.empresasCliente = list; },
+          error: () => { this.empresasCliente = []; },
+        });
+      }
+
+      // Stats internas Lulo (usuarios + roles) si tiene permiso para verlos.
+      if (this.auth.isSuperadmin() || this.auth.can('LULO_USUARIO_VER')) {
+        this.http.get<any[]>(`${environment.apiUrl}/users`).subscribe({
+          next: (users) => {
+            const internos = users.filter(u =>
+              (u.email || '').toLowerCase().endsWith('@lulo.app'));
+            this.totalUsuariosLulo = internos.length;
+            this.ultimosUsuariosLulo = internos.slice(0, 5)
+              .map(u => ({ email: u.email, estado: u.estado }));
+          },
+          error: () => {},
+        });
+      }
+      if (this.auth.isSuperadmin() || this.auth.can('LULO_ROL_GESTIONAR')) {
+        const poolId = session.poolId;
+        if (poolId) {
+          this.rolPoolService.listar(poolId).subscribe({
+            next: (roles) => { this.totalRolesLulo = roles.length; },
+            error: () => {},
+          });
+        }
+      }
+
+      this.loadingEmpresas = false;
+      this.loading = false;
+      return;
+    }
+
+    // Vista usuario de empresa cliente
     this.empresaService.detalle(session.empresaId).subscribe({
       next: (e) => {
         this.empresa = e;
@@ -44,5 +114,76 @@ export class UserDashboardComponent implements OnInit {
         this.loading = false;
       },
     });
+
+    if (this.auth.isSuperadmin() || this.auth.can('POOL_ADMINISTRAR') || this.auth.can('PROCESO_VER')) {
+      this.poolService.listar().subscribe({
+        next: (list) => { this.poolsList = list; },
+        error: () => { this.poolsList = []; },
+      });
+    }
+
+    if (this.puedeVerDiagramas) {
+      this.loadingDiagramas = true;
+      this.procesoService.listar({ size: 5 }).subscribe({
+        next: (page) => {
+          this.diagramasRecientes = (page.content || []).slice(0, 5);
+          this.loadingDiagramas = false;
+        },
+        error: () => { this.loadingDiagramas = false; },
+      });
+    }
+  }
+
+  // ── Getters para vista Lulo ────────────────────────────────────────
+  get totalEmpresas(): number { return this.empresasCliente.length; }
+  get totalUsuariosCliente(): number {
+    return this.empresasCliente.reduce((a, e) => a + (e.totalUsuarios || 0), 0);
+  }
+  get totalProcesosCliente(): number {
+    return this.empresasCliente.reduce((a, e) => a + (e.totalProcesos || 0), 0);
+  }
+  get ultimasEmpresas(): EmpresaListItem[] {
+    return [...this.empresasCliente]
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+      .slice(0, 5);
+  }
+
+  // ── Capabilities (controlan qué cards se muestran en el dashboard) ────
+  get esSuperadmin(): boolean { return this.auth.isSuperadmin(); }
+  get puedeVerEmpresas(): boolean { return this.esSuperadmin || this.auth.can('EMPRESA_VER'); }
+  get puedeGestionarEmpresas(): boolean {
+    return this.esSuperadmin || this.auth.can('EMPRESA_CREAR') || this.auth.can('EMPRESA_EDITAR');
+  }
+  get puedeVerUsuariosLulo(): boolean {
+    return this.esSuperadmin || this.auth.can('LULO_USUARIO_VER');
+  }
+  get puedeGestionarRolesLulo(): boolean {
+    return this.esSuperadmin || this.auth.can('LULO_ROL_GESTIONAR');
+  }
+  get puedeVerAuditoria(): boolean {
+    return this.esSuperadmin || this.auth.can('AUDIT_GLOBAL_VER') || this.auth.can('METRICAS_VER');
+  }
+  get puedeVerSoporte(): boolean {
+    return this.esSuperadmin || this.auth.can('SOPORTE_PROCESOS_VER');
+  }
+
+  // ── Client (empresa cliente) capabilities ───────────────────────────
+  get puedeVerProcesos(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_VER'); }
+  get puedeCrearProceso(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_CREAR'); }
+  get puedeVerUsuariosEmpresa(): boolean { return this.esSuperadmin || this.auth.can('USUARIO_VER'); }
+  get puedeVerRolesEmpresa(): boolean { return this.esSuperadmin || this.auth.can('ROL_VER'); }
+  get puedeAdministrarPools(): boolean { return this.esSuperadmin || this.auth.can('POOL_ADMINISTRAR'); }
+  get puedeVerMonitoring(): boolean { return this.esSuperadmin || this.auth.can('USUARIO_VER') || this.auth.can('METRICAS_VER') || this.auth.can('AUDIT_VER'); }
+  get puedeVerDiagramas(): boolean { return this.esSuperadmin || this.auth.can('DIAGRAMA_VER') || this.auth.can('DIAGRAMA_EDITAR'); }
+  get puedeCrearDiagrama(): boolean { return this.esSuperadmin || this.auth.can('PROCESO_CREAR'); }
+  get puedeEditarDiagrama(): boolean { return this.esSuperadmin || this.auth.can('DIAGRAMA_EDITAR') || this.auth.can('PROCESO_EDITAR'); }
+
+  /**
+   * Rol bonito para mostrar en saludo. "SuperAdmin" / "Gestor de Empresas" /
+   * etc. (viene del rol_pool asignado, no del tipo global).
+   */
+  get rolDisplay(): string {
+    const s = this.auth.getSession();
+    return s?.rolPoolNombre || s?.rol || 'Usuario';
   }
 }

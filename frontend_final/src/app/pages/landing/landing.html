@@ -3,23 +3,23 @@
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-left">
-        <a href="#" class="logo">BPM <span>COMMAND</span></a>
+        <a routerLink="/" class="logo">BPM <span>COMMAND</span></a>
         <ul class="nav-links">
-          <li><a href="#" class="active">Solutions</a></li>
-          <li><a href="#">Framework</a></li>
-          <li><a href="#">Governance</a></li>
-          <li><a href="#">Security</a></li>
+          <li><a href="#hero" class="active">Solutions</a></li>
+          <li><a href="#framework">Framework</a></li>
+          <li><a href="#governance">Governance</a></li>
+          <li><a href="#security">Security</a></li>
         </ul>
       </div>
       <div class="nav-right">
         <a routerLink="/login" class="login-link">Log In</a>
-        <button routerLink="/login" class="btn btn-primary">Get Started</button>
+        <a routerLink="/register-empresa" class="btn btn-primary">Get Started</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <section class="hero">
+  <section class="hero" id="hero">
     <div class="container hero-grid">
       <div class="hero-content">
         <div class="badge">
@@ -37,8 +37,8 @@
           operational environments.
         </p>
         <div class="hero-actions">
-          <button routerLink="/login" class="btn btn-primary">Get Started</button>
-          <button class="btn btn-outline">Request Demo</button>
+          <a routerLink="/register-empresa" class="btn btn-primary">Get Started</a>
+          <a href="#framework" class="btn btn-outline">Learn more</a>
         </div>
       </div>
       <div class="hero-visual">
@@ -86,12 +86,12 @@
     </div>
   </section>
 
-  <!-- Features Section -->
-  <section class="features">
+  <!-- Framework Section -->
+  <section class="features" id="framework">
     <div class="container">
       <div class="features-header">
-        <h2>Command and Control at Scale</h2>
-        <p>Transform complex, multi-layered business processes into manageable, linear<br>workflows with our clinical grade toolset.</p>
+        <h2>The framework</h2>
+        <p>Model BPMN processes, manage users per company and inspect<br>everything from a single console. Spring Boot backend + Angular frontend.</p>
       </div>
 
       <div class="features-grid">
@@ -165,6 +165,68 @@
     </div>
   </section>
 
+  <!-- Governance Section -->
+  <section class="info-section" id="governance">
+    <div class="container info-grid">
+      <div>
+        <span class="info-tag">GOVERNANCE</span>
+        <h2>Roles, permissions and traceability</h2>
+        <p>
+          Each company defines its own roles inside work pools. You assign
+          granular permissions (view processes, edit diagrams, manage users,
+          audit) and every change is recorded in the audit log.
+        </p>
+        <ul class="info-bullets">
+          <li>✓ Preconfigured roles by default</li>
+          <li>✓ Permissions toggled by checkbox</li>
+          <li>✓ Change history per entity</li>
+          <li>✓ Backend validation with &#64;PreAuthorize</li>
+        </ul>
+      </div>
+      <div class="info-visual">
+        <div class="info-card">
+          <div class="info-card-row"><strong>SuperAdmin</strong><span>Lulo · 15 permissions</span></div>
+          <div class="info-card-row"><strong>Company Admin</strong><span>Acme · full access</span></div>
+          <div class="info-card-row"><strong>Auditor</strong><span>Global read</span></div>
+          <div class="info-card-row"><strong>Operator</strong><span>Processes · view/edit</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security Section -->
+  <section class="info-section info-dark" id="security">
+    <div class="container info-grid">
+      <div class="info-visual">
+        <div class="info-card info-card-dark">
+          <code class="info-code">
+            POST /api/auth/login<br>
+            → JWT HS256 (1h)<br><br>
+            GET /api/procesos<br>
+            Authorization: Bearer ...<br>
+            → 200 OK (filtered by company)
+          </code>
+        </div>
+      </div>
+      <div>
+        <span class="info-tag info-tag-light">SECURITY</span>
+        <h2>True multi-company isolation</h2>
+        <p>
+          HS256-signed JWT authentication. Every request is validated and
+          permissions are resolved server-side from the user type. Company
+          isolation is enforced with a Hibernate filter activated per
+          request: your company never sees data from another.
+        </p>
+        <ul class="info-bullets info-bullets-light">
+          <li>✓ JWT with automatic refresh</li>
+          <li>✓ Multi-tenant Hibernate filter by company ID</li>
+          <li>✓ BCrypt(12) for passwords</li>
+          <li>✓ Soft delete and audited suspension</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA Section -->
   <section class="cta-section">
     <div class="container">
@@ -172,8 +234,8 @@
         <h2>Ready to scale your operational<br>efficiency?</h2>
         <p>Join over 250 enterprise organizations using BPM Command to stabilize<br>their growth and automate infrastructure governance.</p>
         <div class="cta-actions">
-          <button class="btn btn-white">Start Deployment</button>
-          <button class="btn btn-outline-white">View Documentation</button>
+          <a routerLink="/register-empresa" class="btn btn-white">Register my company</a>
+          <a routerLink="/login" class="btn btn-outline-white">I already have an account</a>
         </div>
       </div>
     </div>

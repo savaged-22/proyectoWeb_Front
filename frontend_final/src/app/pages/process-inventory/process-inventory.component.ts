@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 import { Proceso } from '../../models/proceso/proceso.model';
 import { ProcesoService } from '../../services/proceso.service';
+import { PoolService } from '../../services/pool.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -16,7 +17,11 @@ import { AuthService } from '../../services/auth.service';
 })
 export class ProcessInventoryComponent implements OnInit {
   private procesoService = inject(ProcesoService);
+  private poolService = inject(PoolService);
   private auth = inject(AuthService);
+  private router = inject(Router);
+
+  importing = false;
 
   procesos: Proceso[] = [];
   plantillas: Proceso[] = [];
@@ -25,6 +30,14 @@ export class ProcessInventoryComponent implements OnInit {
   procesosArchivados: Proceso[] = [];
   loading = true;
   error = '';
+
+  get isLuloInternal(): boolean {
+    return this.auth.isLuloInternal();
+  }
+
+  get puedeCrear(): boolean {
+    return this.auth.isSuperadmin() || this.auth.can('PROCESO_CREAR');
+  }
 
   filterCategoria = '';
   filterEstado = '';
@@ -184,5 +197,67 @@ export class ProcessInventoryComponent implements OnInit {
     this.toastType = tipo;
     this.showToast = true;
     setTimeout(() => this.showToast = false, 3000);
+  }
+
+  async onImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'bpmn' && ext !== 'xml') {
+      this.mostrarToast('Only .bpmn or .xml files supported', 'error');
+      return;
+    }
+
+    this.importing = true;
+    let xml: string;
+    try {
+      xml = await file.text();
+    } catch {
+      this.importing = false;
+      this.mostrarToast('Could not read file', 'error');
+      return;
+    }
+    if (!xml.includes('<bpmn:definitions') && !xml.includes('<definitions')) {
+      this.importing = false;
+      this.mostrarToast('File is not a valid BPMN XML', 'error');
+      return;
+    }
+
+    this.poolService.listar().subscribe({
+      next: (pools) => {
+        if (!pools.length) {
+          this.importing = false;
+          this.mostrarToast('No pools available — create one first', 'error');
+          return;
+        }
+        const nombre = file.name.replace(/\.(bpmn|xml)$/i, '').slice(0, 100) || 'Imported process';
+        this.procesoService.crear({
+          poolId: pools[0].id,
+          nombre,
+          descripcion: `Imported from ${file.name}`,
+          categoria: 'admin',
+          esPlantilla: false,
+        } as any).subscribe({
+          next: (proceso) => {
+            sessionStorage.setItem('lulo:importXml', xml);
+            sessionStorage.setItem('lulo:importProcesoId', proceso.id);
+            this.importing = false;
+            this.router.navigate(['/app/process-builder'], { queryParams: { id: proceso.id, import: '1' } });
+          },
+          error: (err) => {
+            console.error(err);
+            this.importing = false;
+            this.mostrarToast('Could not create process', 'error');
+          }
+        });
+      },
+      error: () => {
+        this.importing = false;
+        this.mostrarToast('Could not load pools', 'error');
+      }
+    });
   }
 }

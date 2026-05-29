@@ -89,3 +89,47 @@
   .info-row { grid-template-columns: repeat(2, 1fr); }
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
 }
+
+.readonly-pill {
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: linear-gradient(90deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  vertical-align: middle;
+}
+
+.proc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+.proc-table th,
+.proc-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  font-size: 0.88rem;
+}
+.proc-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.proc-table tr:last-child td { border-bottom: none; }
+.proc-table .badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.proc-table .badge.green { background: #dcfce7; color: #166534; }
+.proc-table .badge.amber { background: #fef3c7; color: #b45309; }
+.proc-table .badge.gray  { background: #f1f5f9; color: #64748b; }

@@ -1,0 +1,78 @@
+<section class="sa-page">
+  <header class="sa-header">
+    <div>
+      <h1>Empresas registradas</h1>
+      <p class="sa-sub">Panel exclusivo del dueño de la aplicación. Crea empresas y su administrador inicial.</p>
+    </div>
+    <button class="sa-btn primary" (click)="abrirFormulario()" *ngIf="!mostrarFormulario()">
+      + Nueva empresa
+    </button>
+  </header>
+
+  <div class="sa-alert" *ngIf="error()">{{ error() }}</div>
+
+  <!-- Formulario alta -->
+  <form class="sa-form" *ngIf="mostrarFormulario()" (ngSubmit)="guardar()">
+    <h2>Registrar nueva empresa</h2>
+    <div class="grid">
+      <label>
+        <span>Nombre empresa *</span>
+        <input type="text" [(ngModel)]="nueva.nombreEmpresa" name="nombre" required>
+      </label>
+      <label>
+        <span>NIT *</span>
+        <input type="text" [(ngModel)]="nueva.nit" name="nit" required>
+      </label>
+      <label>
+        <span>Dominio email * <small>(ej. acme.com)</small></span>
+        <input type="text" [(ngModel)]="nueva.dominio" name="dominio" placeholder="acme.com" required>
+      </label>
+      <label>
+        <span>Email de contacto</span>
+        <input type="email" [(ngModel)]="nueva.emailContacto" name="emailContacto">
+      </label>
+      <label>
+        <span>Email del Admin Empresa *</span>
+        <input type="email" [(ngModel)]="nueva.emailAdmin" name="emailAdmin" required>
+      </label>
+      <label class="full">
+        <span>Password del Admin *</span>
+        <input type="password" [(ngModel)]="nueva.password" name="password" required minlength="6">
+      </label>
+    </div>
+    <div class="sa-actions">
+      <button type="button" class="sa-btn" (click)="cancelar()" [disabled]="enviando()">Cancelar</button>
+      <button type="submit" class="sa-btn primary" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : 'Crear empresa' }}
+      </button>
+    </div>
+  </form>
+
+  <!-- Listado -->
+  <div class="sa-loading" *ngIf="cargando()">Cargando empresas…</div>
+
+  <div class="sa-table" *ngIf="!cargando() && empresas().length > 0">
+    <div class="sa-row sa-row-head">
+      <span>Empresa</span>
+      <span>NIT</span>
+      <span>Contacto</span>
+      <span>Usuarios</span>
+      <span>Pools</span>
+      <span>Creada</span>
+      <span></span>
+    </div>
+    <div class="sa-row" *ngFor="let e of empresas(); trackBy: trackById">
+      <span><strong>{{ e.nombre }}</strong></span>
+      <span>{{ e.nit }}</span>
+      <span>{{ e.emailContacto || '—' }}</span>
+      <span>{{ e.totalUsuarios }}</span>
+      <span>{{ e.totalPools }}</span>
+      <span>{{ e.createdAt | date:'short' }}</span>
+      <span><button class="sa-btn small" (click)="verDetalle(e)">Ver</button></span>
+    </div>
+  </div>
+
+  <div class="sa-empty" *ngIf="!cargando() && empresas().length === 0">
+    Aún no hay empresas registradas. Crea la primera con el botón "Nueva empresa".
+  </div>
+</section>
