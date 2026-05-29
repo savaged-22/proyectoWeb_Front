@@ -1,0 +1,67 @@
+<section class="lm-page">
+  <header class="lm-head">
+    <div>
+      <h1>Metrics</h1>
+    </div>
+    <button class="lm-refresh" (click)="cargar()" [disabled]="loading()">
+      Refresh
+    </button>
+  </header>
+
+  <div *ngIf="loading()" class="lm-state">Loading metrics…</div>
+  <div *ngIf="error()" class="lm-state lm-error">{{ error() }}</div>
+
+  <ng-container *ngIf="!loading() && !error()">
+
+    <h2 class="lm-section-title">Clients</h2>
+    <div class="lm-grid">
+      <div class="lm-card lm-card-primary">
+        <div class="lm-lbl">Registered companies</div>
+        <div class="lm-val">{{ data()['empresas'] || 0 }}</div>
+        <div class="lm-hint">Total organizations on the platform</div>
+      </div>
+      <div class="lm-card">
+        <div class="lm-lbl">Total users</div>
+        <div class="lm-val">{{ data()['usuarios'] || 0 }}</div>
+        <div class="lm-hint">Active, suspended and inactive</div>
+      </div>
+      <div class="lm-card">
+        <div class="lm-lbl">Workspace pools</div>
+        <div class="lm-val">{{ data()['pools'] || 0 }}</div>
+        <div class="lm-hint">Team spaces inside companies</div>
+      </div>
+    </div>
+
+    <h2 class="lm-section-title">Content</h2>
+    <div class="lm-grid">
+      <div class="lm-card lm-card-primary">
+        <div class="lm-lbl">Processes created</div>
+        <div class="lm-val">{{ data()['procesos'] || 0 }}</div>
+        <div class="lm-hint">All active processes in the database</div>
+      </div>
+      <div class="lm-card">
+        <div class="lm-lbl">Roles configured</div>
+        <div class="lm-val">{{ data()['rolesPool'] || 0 }}</div>
+        <div class="lm-hint">Permission profiles available in pools</div>
+      </div>
+    </div>
+
+    <h2 class="lm-section-title">Traceability</h2>
+    <div class="lm-grid">
+      <div class="lm-card lm-card-primary">
+        <div class="lm-lbl">Audited events</div>
+        <div class="lm-val">{{ data()['eventosAudit'] || 0 }}</div>
+        <div class="lm-hint">Actions recorded with before/after snapshot</div>
+      </div>
+      <div class="lm-card lm-card-status">
+        <div class="lm-lbl">Service status</div>
+        <div class="lm-val lm-status-ok">OPERATIONAL</div>
+        <div class="lm-hint">Backend, database and authentication responding</div>
+      </div>
+    </div>
+
+    <p *ngIf="timestamp()" class="lm-ts">
+      Reading: {{ timestamp() | date:'medium' }}
+    </p>
+  </ng-container>
+</section>

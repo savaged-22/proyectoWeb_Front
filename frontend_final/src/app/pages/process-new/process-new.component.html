@@ -1,20 +1,20 @@
 <nav class="breadcrumb">
-  <a routerLink="/app/processes">Process Designer</a>
+  <a routerLink="/app/processes">Processes</a>
   <span>/</span>
-  <span class="current">New Process</span>
+  <span class="current">{{ isTemplate ? 'New Design' : 'New Process' }}</span>
 </nav>
 
 <header class="page-header">
   <div>
     <h1>{{ isTemplate ? 'Initialize New Design Blueprint' : 'Initialize New Workflow' }}</h1>
     <p class="subtitle">
-      {{ isTemplate ? 'Define the core metadata for the new reusable template.' : 'Define the core parameters and logical hierarchy for the new BPM instance.' }}
+      {{ isTemplate ? 'Define the core metadata for the new reusable design.' : 'Define the core parameters and logical hierarchy for the new BPM instance.' }}
     </p>
   </div>
   <div class="actions">
     <button class="btn btn-outline" (click)="cancel()">Cancel</button>
     <button class="btn btn-primary" (click)="submit()" [disabled]="saving">
-      {{ saving ? 'Creating…' : 'Create Process' }}
+      {{ saving ? 'Creating…' : (isTemplate ? 'Create Design' : 'Create Process') }}
     </button>
   </div>
 </header>
@@ -32,12 +32,12 @@
       </div>
 
       <div class="form-group">
-        <label>Process Name</label>
+        <label>{{ isTemplate ? 'Design Name' : 'Process Name' }}</label>
         <input
           type="text"
           [(ngModel)]="nombre"
           name="nombre"
-          placeholder="e.g. Employee Onboarding Flow"
+          [placeholder]="isTemplate ? 'e.g. Standard Onboarding Design' : 'e.g. Employee Onboarding Flow'"
           required
         />
         <div class="hint">Unique identifier used across the enterprise orchestration layer.</div>

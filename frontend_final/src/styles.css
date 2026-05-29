@@ -45,7 +45,9 @@ a { color: inherit; }
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
   gap: 1rem;
 }
 .page-header h1 {
@@ -177,8 +179,10 @@ a { color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  text-decoration: none;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
+.btn:hover, .btn:focus, .btn:visited { text-decoration: none; }
 .btn-primary {
   background: var(--color-primary);
   color: #fff;
